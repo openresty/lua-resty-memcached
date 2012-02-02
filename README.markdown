@@ -3,7 +3,7 @@ Description
 
 This Lua library is a memcached client driver for the ngx_lua nginx module:
 
-    http://wiki.nginx.org/HttpLuaNginxModule
+http://wiki.nginx.org/HttpLuaNginxModule
 
 This Lua library takes advantage of ngx_lua's cosocket API, which ensures
 100% nonblocking behavior.
