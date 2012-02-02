@@ -1,4 +1,3 @@
--- vim:set ft= ts=4 sw=4 et
 -- Copyright (C) 2012 Zhang "agentzh" Yichun (章亦春)
 
 module("resty.memcached", package.seeall)
