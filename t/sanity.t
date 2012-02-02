@@ -42,6 +42,7 @@ __DATA__
             local ok, err = memc:set("dog", 32)
             if not ok then
                 ngx.say("failed to set dog: ", err)
+                return
             end
 
             local res, err = memc:get("dog")
