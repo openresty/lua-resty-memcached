@@ -1,0 +1,64 @@
+# vim:set ft= ts=4 sw=4 et
+
+use Test::Nginx::Socket;
+use Cwd qw(cwd);
+
+repeat_each(2);
+
+plan tests => repeat_each() * (3 * blocks());
+
+my $pwd = cwd();
+
+our $HttpConfig = qq{
+    lua_package_path "$pwd/lib/?.lua;;";
+};
+
+run_tests();
+
+__DATA__
+
+=== TEST 1: basic
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc, err = memcached.connect("127.0.0.1", 11211)
+            if not memc then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+            end
+
+            local res, err = memc:get("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not res then
+                ngx.say("dog not found")
+                return
+            end
+
+            ngx.say("dog: ", res)
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+dog: 32
+--- no_error_log
+[error]
+
