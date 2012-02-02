@@ -1,0 +1,4 @@
+This Lua library is a memcached driver for the ngx_lua nginx module:
+
+    http://wiki.nginx.org/HttpLuaNginxModule
+
