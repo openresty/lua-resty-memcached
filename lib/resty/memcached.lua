@@ -8,17 +8,32 @@ local mt = { __index = resty.memcached }
 
 local sub = string.sub
 local escape_uri = ngx.escape_uri
-local socket_connect = ngx.socket.connect
 local match = string.match
+local tcp = ngx.socket.tcp
 
 
-function connect(...)
-    local sock, err = socket_connect(...)
+function new(self)
+    return setmetatable({ sock = tcp() }, mt)
+end
+
+
+function settimeout(self, timeout)
+    local sock = self.sock
     if not sock then
-        return nil, err
+        return nil, "not initialized"
     end
 
-    return setmetatable({ sock = sock }, mt)
+    return sock:settimeout(timeout)
+end
+
+
+function connect(self, ...)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    return sock:connect(...)
 end
 
 
@@ -26,7 +41,7 @@ function get(self, key)
     local cmd = "get " .. escape_uri(key) .. "\r\n"
     local sock = self.sock
     if not sock then
-        return nil, "not connected"
+        return nil, "not initialized"
     end
 
     local bytes, err = sock:send(cmd)
@@ -66,7 +81,7 @@ function set(self, key, value, exptime, flags)
 
     local sock = self.sock
     if not sock then
-        return nil, "not connected"
+        return nil, "not initialized"
     end
 
     local cmd = table.concat({"set ", escape_uri(key), " ", flags, " ", exptime, " ", string.len(value), "\r\n", value, "\r\n"}, "")
@@ -88,7 +103,7 @@ end
 function set_keepalive(self, ...)
     local sock = self.sock
     if not sock then
-        return nil, "not connected"
+        return nil, "not initialized"
     end
 
     return sock:setkeepalive(...)
@@ -98,7 +113,7 @@ end
 function flush_all(self)
     local sock = self.sock
     if not sock then
-        return nil, "not connected"
+        return nil, "not initialized"
     end
 
     local bytes, err = sock:send("flush_all\r\n")
@@ -122,7 +137,7 @@ end
 function close(self)
     local sock = self.sock
     if not sock then
-        return nil, "not connected"
+        return nil, "not initialized"
     end
 
     return sock:close()

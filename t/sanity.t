@@ -23,8 +23,12 @@ __DATA__
     location /t {
         content_by_lua '
             local memcached = require "resty.memcached"
-            local memc, err = memcached.connect("127.0.0.1", 11211)
-            if not memc then
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
                 ngx.say("failed to connect: ", err)
                 return
             end
