@@ -84,7 +84,9 @@ function set(self, key, value, exptime, flags)
         return nil, "not initialized"
     end
 
-    local cmd = table.concat({"set ", escape_uri(key), " ", flags, " ", exptime, " ", string.len(value), "\r\n", value, "\r\n"}, "")
+    local cmd = table.concat({"set ", escape_uri(key), " ", flags, " ",
+                             exptime, " ", string.len(value), "\r\n", value,
+                             "\r\n"}, "")
 
     local bytes, err = sock:send(cmd)
     if not bytes then
