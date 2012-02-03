@@ -23,6 +23,10 @@ Synopsis
 
                 memc:settimeout(1000) -- 1 sec
 
+                -- or connect to a unix domain socket file listened
+                -- by a memcached server:
+                --     local ok, err = memc:connect("unix:/path/to/memc.sock")
+
                 local ok, err = memc:connect("127.0.0.1", 11211)
                 if not ok then
                     ngx.say("failed to connect: ", err)
@@ -57,6 +61,13 @@ Synopsis
                 -- put it into the connection pool of size 100,
                 -- with 0 idle timeout
                 memc:setkeepalive(0, 100)
+
+                -- or just close the connection right away:
+                -- local ok, err = memc:close()
+                -- if not ok then
+                --     ngx.say("failed to close: ", err)
+                --     return
+                -- end
             ';
         }
     }
