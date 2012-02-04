@@ -200,6 +200,42 @@ function flush_all(self, time)
 end
 
 
+function _incr_decr(self, cmd, key, value)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local request = table.concat({cmd, " ", escape_uri(key), " ", value, "\r\n"}, "")
+
+    local bytes, err = sock:send(request)
+    if not bytes then
+        return nil, err
+    end
+
+    local line, err = sock:receive()
+    if not line then
+        return nil, err
+    end
+
+    if not match(line, '^%d+$') then
+        return nil, line
+    end
+
+    return line
+end
+
+
+function incr(self, key, value)
+    return _incr_decr(self, "incr", key, value)
+end
+
+
+function decr(self, key, value)
+    return _incr_decr(self, "decr", key, value)
+end
+
+
 function close(self)
     local sock = self.sock
     if not sock then
