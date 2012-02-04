@@ -181,3 +181,12 @@ If the entry is found and no error happens, value and flags will be returned acc
 
 In case of errors or entry absence, `nil` values will be turned for `value` and `flags` and a 3rd (string) value will also be returned for describing the error.
 
+
+flush_all
+---------
+`syntax: ok, err = memc:flush_all(key)`
+
+Flushes (or invalidates) all the existing entries in the memcached server.
+
+In case of success, returns `1`. In case of errors, returns `nil` with a string describing the error.
+
