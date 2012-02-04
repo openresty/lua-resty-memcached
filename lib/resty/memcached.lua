@@ -69,7 +69,32 @@ function get(self, key)
 end
 
 
-function set(self, key, value, exptime, flags)
+function set(self, ...)
+    return _store(self, "set", ...)
+end
+
+
+function add(self, ...)
+    return _store(self, "add", ...)
+end
+
+
+function replace(self, ...)
+    return _store(self, "replace", ...)
+end
+
+
+function append(self, ...)
+    return _store(self, "append", ...)
+end
+
+
+function prepend(self, ...)
+    return _store(self, "prepend", ...)
+end
+
+
+function _store(self, cmd, key, value, exptime, flags)
     if not exptime then
         exptime = 0
     end
@@ -83,21 +108,21 @@ function set(self, key, value, exptime, flags)
         return nil, "not initialized"
     end
 
-    local cmd = table.concat({"set ", escape_uri(key), " ", flags, " ",
+    local request = table.concat({cmd, " ", escape_uri(key), " ", flags, " ",
                              exptime, " ", string.len(value), "\r\n", value,
                              "\r\n"}, "")
 
-    local bytes, err = sock:send(cmd)
+    local bytes, err = sock:send(request)
     if not bytes then
         return nil, err
     end
 
     local data, err = sock:receive()
-    if sub(data, 1, 6) == "STORED" then
-        return true
+    if data == "STORED" then
+        return 1
     end
 
-    return false, err
+    return nil, data
 end
 
 
@@ -131,7 +156,7 @@ function flush_all(self)
         return nil, res
     end
 
-    return true
+    return 1
 end
 
 
