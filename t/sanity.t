@@ -798,3 +798,119 @@ dog: 32 (flags: 526)
 --- no_error_log
 [error]
 
+
+
+=== TEST 15: set with exptime
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32, 1, 526)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local res, flags, err = memc:get("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            ngx.location.capture("/sleep");
+
+            if not res then
+                ngx.say("dog not found")
+                return
+            end
+
+            ngx.say("dog: ", res, " (flags: ", flags, ")")
+            memc:close()
+        ';
+    }
+
+    location /sleep {
+        echo_sleep 1.01;
+    }
+--- request
+GET /t
+--- response_body
+dog: 32 (flags: 526)
+--- no_error_log
+[error]
+
+
+
+=== TEST 16: flush with a delay
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all(2)
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local res, flags, err = memc:get("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not res then
+                ngx.say("dog not found")
+                return
+            end
+
+            ngx.say("dog: ", res, " (flags: ", flags, ")")
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+dog: 32 (flags: 0)
+--- no_error_log
+[error]
+
