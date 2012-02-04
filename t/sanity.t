@@ -1274,3 +1274,39 @@ GET /t
 --- no_error_log
 [error]
 
+
+
+=== TEST 24: version
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ver, err = memc:version()
+            if not ver then
+                ngx.say("failed to get version: ", err)
+                return
+            end
+
+            ngx.say("version: ", ver)
+
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body_like chop
+^version: \d+(?:\.\d+)*$
+--- no_error_log
+[error]
+

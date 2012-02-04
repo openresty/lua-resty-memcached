@@ -49,6 +49,10 @@ function get(self, key)
     end
 
     local line, err = sock:receive()
+    if not line then
+        return nil, err
+    end
+
     if line == 'END' then
         return nil, nil
     end
@@ -118,6 +122,10 @@ function _store(self, cmd, key, value, exptime, flags)
     end
 
     local data, err = sock:receive()
+    if not data then
+        return nil, err
+    end
+
     if data == "STORED" then
         return 1
     end
@@ -257,6 +265,10 @@ function stats(self, args)
     local lines = {}
     while true do
         local line, err = sock:receive()
+        if not line then
+            return nil, err
+        end
+
         if line == 'END' then
             return lines, nil
         end
@@ -270,6 +282,31 @@ function stats(self, args)
 
     -- cannot reach here...
     return lines
+end
+
+
+function version(self)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local bytes, err = sock:send("version\r\n")
+    if not bytes then
+        return nil, err
+    end
+
+    local line, err = sock:receive()
+    if not line then
+        return nil, err
+    end
+
+    local ver = match(line, "^VERSION (.+)$")
+    if not ver then
+        return nil, ver
+    end
+
+    return ver
 end
 
 

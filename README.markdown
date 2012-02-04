@@ -232,6 +232,14 @@ In case of success, this method returns a lua table holding all of the lines of 
 
 If the `args` argument is omitted, general server statistics is returned. Possible `args` argument values are `items`, `sizes`, `slabs`, among others.
 
+version
+-------
+`syntax: version, err = memc:version(args?)`
+
+Returns the server version number, like `1.2.8`.
+
+In case of error, it returns `nil` with a string describing the error.
+
 Author
 ======
 
