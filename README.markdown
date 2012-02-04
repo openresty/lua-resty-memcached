@@ -184,7 +184,9 @@ Get a single entry in the memcached server via a key.
 
 If the entry is found and no error happens, value and flags will be returned accordingly.
 
-In case of errors or entry absence, `nil` values will be turned for `value` and `flags` and a 3rd (string) value will also be returned for describing the error.
+In case of errors, `nil` values will be turned for `value` and `flags` and a 3rd (string) value will also be returned for describing the error.
+
+If the entry is not found, then two `nil` values will be returned.
 
 flush_all
 ---------
@@ -249,6 +251,14 @@ Tells the server to close the current memcached connection.
 Returns `1` in case of success and `nil` other wise. In case of failures, another string value will also be returned to describe the error.
 
 Generally you can just directly call the `close` method to achieve the same effect.
+
+verbosity
+---------
+`syntax: ok, err = memc:verbosity(level)`
+
+Sets the verbosity level used by the memcached server. The `level` argument should be given integers only.
+
+Returns `1` in case of success and `nil` other wise. In case of failures, another string value will also be returned to describe the error.
 
 Author
 ======

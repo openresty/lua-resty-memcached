@@ -325,6 +325,30 @@ function quit(self)
 end
 
 
+function verbosity(self, level)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local bytes, err = sock:send("verbosity " .. level .. "\r\n")
+    if not bytes then
+        return nil, err
+    end
+
+    local line, err = sock:receive()
+    if not line then
+        return nil, err
+    end
+
+    if line ~= 'OK' then
+        return nil, line
+    end
+
+    return 1
+end
+
+
 function close(self)
     local sock = self.sock
     if not sock then
