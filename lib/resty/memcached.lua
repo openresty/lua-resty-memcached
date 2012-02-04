@@ -144,3 +144,10 @@ function close(self)
     return sock:close()
 end
 
+
+-- to prevent use of casual module global variables
+getmetatable(resty.memcached).__newindex = function (table, key, val)
+    error('attempt to write to undeclared variable "' .. key .. '": '
+            .. debug.traceback())
+end
+
