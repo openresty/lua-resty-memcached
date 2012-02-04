@@ -236,6 +236,43 @@ function decr(self, key, value)
 end
 
 
+function stats(self, args)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local request
+    if args then
+        request = "stats " .. args .. "\r\n"
+    else
+        request = "stats\r\n"
+    end
+
+    local bytes, err = sock:send(request)
+    if not bytes then
+        return nil, err
+    end
+
+    local lines = {}
+    while true do
+        local line, err = sock:receive()
+        if line == 'END' then
+            return lines, nil
+        end
+
+        if not match(line, "ERROR") then
+            table.insert(lines, line)
+        else
+            return nil, line
+        end
+    end
+
+    -- cannot reach here...
+    return lines
+end
+
+
 function close(self)
     local sock = self.sock
     if not sock then

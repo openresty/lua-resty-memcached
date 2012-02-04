@@ -21,7 +21,7 @@ Synopsis
     lua_package_path "/path/to/lua-resty-memcached/lib/?.lua;;"
 
     server {
-        location /t {
+        location /test {
             content_by_lua '
                 local memcached = require "resty.memcached"
                 local memc = memcached:new()
@@ -221,6 +221,16 @@ decr
 Decrements the value of the specified key by the integer value specified in the `delta` argument.
 
 Returns the new value after decrementation in success, and `nil` with a string describing the error in case of failures.
+
+stats
+-----
+`syntax: lines, err = memc:stats(args?)`
+
+Returns memcached server statistics information with an optional `args` argument.
+
+In case of success, this method returns a lua table holding all of the lines of the output; in case of failures, it returns `nil` with a string describing the error.
+
+If the `args` argument is omitted, general server statistics is returned. Possible `args` argument values are `items`, `sizes`, `slabs`, among others.
 
 Author
 ======

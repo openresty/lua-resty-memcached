@@ -1144,3 +1144,133 @@ failed to decr dog: NOT_FOUND
 --- no_error_log
 [error]
 
+
+
+=== TEST 21: general stats
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local lines, err = memc:stats()
+            if not lines then
+                ngx.say("failed to stats: ", err)
+                return
+            end
+
+            ngx.say("stats:\\n", table.concat(lines, "\\n"))
+
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body_like chop
+^stats:
+STAT pid \d+
+(?:STAT [^\n]+\n)*$
+--- no_error_log
+[error]
+
+
+
+=== TEST 22: stats items
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local lines, err = memc:stats("items")
+            if not lines then
+                ngx.say("failed to stats items: ", err)
+                return
+            end
+
+            ngx.say("stats:\\n", table.concat(lines, "\\n"))
+
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body_like chop
+^stats:
+(?:STAT items:[^\n]+\n)*$
+--- no_error_log
+[error]
+
+
+
+=== TEST 23: stats sizes
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local lines, err = memc:stats("sizes")
+            if not lines then
+                ngx.say("failed to stats sizes: ", err)
+                return
+            end
+
+            ngx.say("stats:\\n", table.concat(lines, "\\n"))
+
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body_like chop
+^stats:
+(?:\d+ \d+\n)*$
+--- no_error_log
+[error]
+
