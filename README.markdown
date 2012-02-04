@@ -45,7 +45,7 @@ Synopsis
                     return
                 end
 
-                local res, err = memc:get("dog")
+                local res, flags, err = memc:get("dog")
                 if err then
                     ngx.say("failed to get dog: ", err)
                     return
@@ -104,7 +104,7 @@ settimeout
 ----------
 `syntax: memc:settimeout(time)`
 
-Sets the timeout protection for subsequent operations, including the `connect` method.
+Sets the timeout (in ms) protection for subsequent operations, including the `connect` method.
 
 setkeepalive
 ------------
@@ -112,7 +112,7 @@ setkeepalive
 
 Keeps the current memcached connection alive and put it into the ngx_lua cosocket connection pool.
 
-You can specify the max idle timeout when the connection is in the pool and the maximal size of the pool every nginx worker process.
+You can specify the max idle timeout (in ms) when the connection is in the pool and the maximal size of the pool every nginx worker process.
 
 close
 -----
@@ -181,12 +181,12 @@ If the entry is found and no error happens, value and flags will be returned acc
 
 In case of errors or entry absence, `nil` values will be turned for `value` and `flags` and a 3rd (string) value will also be returned for describing the error.
 
-
 flush_all
 ---------
-`syntax: ok, err = memc:flush_all(key)`
+`syntax: ok, err = memc:flush_all(key, time?)`
 
-Flushes (or invalidates) all the existing entries in the memcached server.
+Flushes (or invalidates) all the existing entries in the memcached server immediately (by default) or after the expiration
+specified by the `time` argument (in ms).
 
 In case of success, returns `1`. In case of errors, returns `nil` with a string describing the error.
 

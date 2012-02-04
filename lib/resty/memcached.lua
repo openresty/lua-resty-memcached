@@ -58,7 +58,7 @@ function get(self, key)
         return nil, "bad response: " .. line
     end
 
-    print("size: ", size, ", flags: ", len)
+    -- print("size: ", size, ", flags: ", len)
 
     local data, err = sock:receive(len)
     if not data then
@@ -126,6 +126,39 @@ function _store(self, cmd, key, value, exptime, flags)
 end
 
 
+function delete(self, key, time)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    key = escape_uri(key)
+
+    local request
+    if time then
+        request = table.concat({"delete ", key, " ", time, "\r\n"}, "")
+    else
+        request = "delete " .. key .. "\r\n"
+    end
+
+    local bytes, err = sock:send(request)
+    if not bytes then
+        return nil, err
+    end
+
+    local res, err = sock:receive()
+    if not res then
+        return nil, err
+    end
+
+    if res ~= 'OK' then
+        return nil, res
+    end
+
+    return 1
+end
+
+
 function set_keepalive(self, ...)
     local sock = self.sock
     if not sock then
@@ -136,13 +169,20 @@ function set_keepalive(self, ...)
 end
 
 
-function flush_all(self)
+function flush_all(self, time)
     local sock = self.sock
     if not sock then
         return nil, "not initialized"
     end
 
-    local bytes, err = sock:send("flush_all\r\n")
+    local request
+    if time then
+        request = "flush_all " .. time .. "\r\n"
+    else
+        request = "flush_all\r\n"
+    end
+
+    local bytes, err = sock:send(request)
     if not bytes then
         return nil, err
     end

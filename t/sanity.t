@@ -47,7 +47,7 @@ __DATA__
                 return
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -104,7 +104,7 @@ dog: 32
                 ngx.say("failed to add dog: ", err)
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -156,7 +156,7 @@ dog: 32
                 ngx.say("failed to add dog: ", err)
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -214,7 +214,7 @@ dog: 56
                 return
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -272,7 +272,7 @@ dog: 56
                 return
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -323,7 +323,7 @@ dog: 56
                 ngx.say("failed to replace dog: ", err)
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -375,7 +375,7 @@ dog not found
                 ngx.say("failed to prepend dog: ", err)
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -432,7 +432,7 @@ dog not found
                 ngx.say("failed to prepend dog: ", err)
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -483,7 +483,7 @@ dog: 5632
                 ngx.say("failed to append dog: ", err)
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -540,7 +540,7 @@ dog not found
                 ngx.say("failed to append dog: ", err)
             end
 
-            local res, err = memc:get("dog")
+            local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
                 return
@@ -561,4 +561,5 @@ GET /t
 dog: 3256
 --- no_error_log
 [error]
+--- ONLY
 
