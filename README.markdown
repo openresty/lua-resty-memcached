@@ -240,6 +240,16 @@ Returns the server version number, like `1.2.8`.
 
 In case of error, it returns `nil` with a string describing the error.
 
+quit
+----
+`syntax: ok, err = memc:quit()`
+
+Tells the server to close the current memcached connection.
+
+Returns `1` in case of success and `nil` other wise. In case of failures, another string value will also be returned to describe the error.
+
+Generally you can just directly call the `close` method to achieve the same effect.
+
 Author
 ======
 
