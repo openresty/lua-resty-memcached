@@ -1310,3 +1310,49 @@ GET /t
 --- no_error_log
 [error]
 
+
+
+=== TEST 25: quit
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:quit()
+            if not ok then
+                ngx.say("failed to quit: ", err)
+                return
+            end
+
+            local ver, err = memc:version()
+            if not ver then
+                ngx.say("failed to get version: ", err)
+                return
+            end
+
+            local ok, err = memc:close()
+            if not ok then
+                ngx.say("failed to close: ", err)
+                return
+            end
+
+            ngx.say("closed successfully")
+        ';
+    }
+--- request
+GET /t
+--- response_body
+failed to get version: closed
+--- no_error_log
+[error]
+

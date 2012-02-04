@@ -310,6 +310,21 @@ function version(self)
 end
 
 
+function quit(self)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local bytes, err = sock:send("quit\r\n")
+    if not bytes then
+        return nil, err
+    end
+
+    return 1
+end
+
+
 function close(self)
     local sock = self.sock
     if not sock then
