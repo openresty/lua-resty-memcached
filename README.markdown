@@ -77,20 +77,20 @@ Methods
 
 new
 ---
-syntax: memc = memcached:new()
+`syntax: memc = memcached:new()`
 
 Creates a memcached object. Returns `nil` on error.
 
 connect
 -------
-syntax: ok, err = memc:connect(host, port)
-syntax: ok, err = memc:connect("unix:/path/to/unix.sock")
+`syntax: ok, err = memc:connect(host, port)`
+`syntax: ok, err = memc:connect("unix:/path/to/unix.sock")`
 
 Connects to the remote host and port that the memcached server is listening to or a local unix domain socket file listened by the memcached server.
 
 set
 ---
-syntax: ok, err = memc:set(key, value, exptime, flags)
+`syntax: ok, err = memc:set(key, value, exptime, flags)`
 
 Inserts an entry into memcached unconditionally. If the key already exists, overrides it.
 
@@ -100,13 +100,13 @@ The `flags` parameter is optional, defaults to `0`.
 
 settimeout
 ----------
-syntax: memc:settimeout(time)
+`syntax: memc:settimeout(time)`
 
 Sets the timeout protection for subsequent operations, including the `connect` method.
 
 setkeepalive
 ------------
-syntax: memc:setkeepalive(max_idle_timeout, pool_size)
+`syntax: memc:setkeepalive(max_idle_timeout, pool_size)`
 
 Keeps the current memcached connection alive and put it into the ngx_lua cosocket connection pool.
 
@@ -114,7 +114,7 @@ You can specify the max idle timeout when the connection is in the pool and the 
 
 close
 -----
-syntax: ok, err = memc:close()
+`syntax: ok, err = memc:close()`
 
 Closes the current memcached connection and returns the status.
 
@@ -123,7 +123,7 @@ In case of success, returns `1`. In case of errors, returns `nil` with a string 
 
 add
 ---
-syntax: ok, err = memc:add(key, value, exptime, flags)
+`syntax: ok, err = memc:add(key, value, exptime, flags)`
 
 Inserts an entry into memcached if and only if the key does not exist.
 
@@ -135,7 +135,7 @@ In case of success, returns `1`. In case of errors, returns `nil` with a string 
 
 replace
 -------
-syntax: ok, err = memc:replace(key, value, exptime, flags)
+`syntax: ok, err = memc:replace(key, value, exptime, flags)`
 
 Inserts an entry into memcached if and only if the key does exist.
 
@@ -147,7 +147,7 @@ In case of success, returns `1`. In case of errors, returns `nil` with a string 
 
 append
 ------
-syntax: ok, err = memc:append(key, value, exptime, flags)
+`syntax: ok, err = memc:append(key, value, exptime, flags)`
 
 Appends the value to an entry with the same key that already exists in memcached.
 
@@ -159,7 +159,7 @@ In case of success, returns `1`. In case of errors, returns `nil` with a string 
 
 prepend
 -------
-syntax: ok, err = memc:prepend(key, value, exptime, flags)
+`syntax: ok, err = memc:prepend(key, value, exptime, flags)`
 
 Prepends the value to an entry with the same key that already exists in memcached.
 
