@@ -260,6 +260,14 @@ Sets the verbosity level used by the memcached server. The `level` argument shou
 
 Returns `1` in case of success and `nil` other wise. In case of failures, another string value will also be returned to describe the error.
 
+TODO
+====
+
+* implement the Pipelining API.
+* implement the "gets" method.
+* implement the "cas" method.
+* implement the UDP part of the memcached ascii protocol.
+
 Author
 ======
 
