@@ -151,7 +151,7 @@ function delete(self, key, time)
         return nil, err
     end
 
-    if res ~= 'OK' then
+    if res ~= 'DELETED' then
         return nil, res
     end
 

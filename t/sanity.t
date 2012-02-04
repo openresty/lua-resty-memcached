@@ -372,7 +372,7 @@ dog not found
 
             local ok, err = memc:prepend("dog", 56)
             if not ok then
-                ngx.say("failed to prepend dog: ", err)
+                ngx.say("failed to prepend to dog: ", err)
             end
 
             local res, flags, err = memc:get("dog")
@@ -393,7 +393,7 @@ dog not found
 --- request
 GET /t
 --- response_body
-failed to prepend dog: NOT_STORED
+failed to prepend to dog: NOT_STORED
 dog not found
 --- no_error_log
 [error]
@@ -429,7 +429,7 @@ dog not found
 
             local ok, err = memc:prepend("dog", 56)
             if not ok then
-                ngx.say("failed to prepend dog: ", err)
+                ngx.say("failed to prepend to dog: ", err)
             end
 
             local res, flags, err = memc:get("dog")
@@ -480,7 +480,7 @@ dog: 5632
 
             local ok, err = memc:append("dog", 56)
             if not ok then
-                ngx.say("failed to append dog: ", err)
+                ngx.say("failed to append to dog: ", err)
             end
 
             local res, flags, err = memc:get("dog")
@@ -501,7 +501,7 @@ dog: 5632
 --- request
 GET /t
 --- response_body
-failed to append dog: NOT_STORED
+failed to append to dog: NOT_STORED
 dog not found
 --- no_error_log
 [error]
@@ -537,7 +537,7 @@ dog not found
 
             local ok, err = memc:append("dog", 56)
             if not ok then
-                ngx.say("failed to append dog: ", err)
+                ngx.say("failed to append to dog: ", err)
             end
 
             local res, flags, err = memc:get("dog")
@@ -561,5 +561,178 @@ GET /t
 dog: 3256
 --- no_error_log
 [error]
---- ONLY
+
+
+=== TEST 10: delete an exsistent key
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+            end
+
+            local ok, err = memc:delete("dog")
+            if not ok then
+                ngx.say("failed to delete dog: ", err)
+            end
+
+            local res, flags, err = memc:get("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not res then
+                ngx.say("dog not found")
+                return
+            end
+
+            ngx.say("dog: ", res)
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+dog not found
+--- no_error_log
+[error]
+
+
+=== TEST 10: delete a nonexsistent key
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:delete("dog")
+            if not ok then
+                ngx.say("failed to delete dog: ", err)
+            end
+
+            local res, flags, err = memc:get("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not res then
+                ngx.say("dog not found")
+                return
+            end
+
+            ngx.say("dog: ", res)
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+failed to delete dog: NOT_FOUND
+dog not found
+--- no_error_log
+[error]
+
+
+=== TEST 10: delete an exsistent key with delay
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local ok, err = memc:delete("dog", 1)
+            if not ok then
+                ngx.say("failed to delete dog: ", err)
+            end
+
+            local ok, err = memc:add("dog", 76)
+            if not ok then
+                ngx.say("failed to add dog: ", err)
+            end
+
+            local ok, err = memc:replace("dog", 53)
+            if not ok then
+                ngx.say("failed to replace dog: ", err)
+            end
+
+            local res, flags, err = memc:get("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not res then
+                ngx.say("dog not found")
+                return
+            end
+
+            ngx.say("dog: ", res)
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+failed to add dog: NOT_STORED
+failed to replace dog: NOT_STORED
+dog not found
+--- no_error_log
+[error]
 

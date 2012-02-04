@@ -186,7 +186,18 @@ flush_all
 `syntax: ok, err = memc:flush_all(key, time?)`
 
 Flushes (or invalidates) all the existing entries in the memcached server immediately (by default) or after the expiration
-specified by the `time` argument (in ms).
+specified by the `time` argument (in seconds).
+
+In case of success, returns `1`. In case of errors, returns `nil` with a string describing the error.
+
+
+delete
+------
+`syntax: ok, err = memc:delete(key, time?)`
+
+Deletes the key from memcached immediately (by default) or after a delay (in seconds) specified by the optional `time` argument.
+
+The key to be deleted must already exist in memcached.
 
 In case of success, returns `1`. In case of errors, returns `nil` with a string describing the error.
 
