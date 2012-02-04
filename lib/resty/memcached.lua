@@ -62,10 +62,10 @@ function get(self, key)
 
     local data, err = sock:receive(len)
     if not data then
-        return nil, err
+        return nil, nil, err
     end
 
-    return data
+    return data, flags
 end
 
 

@@ -75,6 +75,8 @@ Synopsis
 Methods
 =======
 
+The `key` argument provided in the following methods will be automatically escaped according to the URI escaping rules before sending to the memcached server.
+
 new
 ---
 `syntax: memc = memcached:new()`
@@ -168,4 +170,14 @@ The `exptime` parameter is optional, defaults to `0`.
 The `flags` parameter is optional, defaults to `0`.
 
 In case of success, returns `1`. In case of errors, returns `nil` with a string describing the error.
+
+get
+---
+`syntax: value, flags, err = memc:get(key)`
+
+Get a single entry in the memcached server via a key.
+
+If the entry is found and no error happens, value and flags will be returned accordingly.
+
+In case of errors or entry absence, `nil` values will be turned for `value` and `flags` and a 3rd (string) value will also be returned for describing the error.
 
