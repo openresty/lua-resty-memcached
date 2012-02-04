@@ -1351,13 +1351,14 @@ GET /t
     }
 --- request
 GET /t
---- response_body
-failed to get version: closed
+--- response_body_like chop
+^failed to get version: \S.*$
 --- no_error_log
 [error]
 
 
-=== TEST 25: verbosity
+
+=== TEST 26: verbosity
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -1398,6 +1399,69 @@ failed to get version: closed
 GET /t
 --- response_body
 successfully set verbosity to level 2
+--- no_error_log
+[error]
+
+
+
+=== TEST 27: multi get
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local ok, err = memc:set("cat", "hello\\nworld\\n")
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local results, err = memc:get({"dog", "blah", "cat"})
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not results then
+                ngx.say("results empty")
+                return
+            end
+
+            ngx.say("dog: ", results.dog and table.concat(results.dog, " ") or "not found")
+            ngx.say("cat: ", results.cat and table.concat(results.cat, " ") or "not found")
+            ngx.say("blah: ", results.blah and table.concat(results.blah, " ") or "not found")
+
+            local ok, err = memc:close()
+            if not ok then
+                ngx.say("failed to close: ", err)
+                return
+            end
+        ';
+    }
+--- request
+GET /t
+--- response_body
+dog: 32 0
+cat: hello
+world
+ 0
+blah: not found
 --- no_error_log
 [error]
 

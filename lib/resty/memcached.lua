@@ -37,32 +37,36 @@ end
 
 
 function get(self, key)
-    local cmd = "get " .. escape_uri(key) .. "\r\n"
-    local sock = self.sock
-    if not sock then
-        return nil, "not initialized"
+    if type(key) == "table" then
+        return _multi_get(self, key)
     end
 
+    local sock = self.sock
+    if not sock then
+        return nil, nil, "not initialized"
+    end
+
+    local cmd = "get " .. escape_uri(key) .. "\r\n"
     local bytes, err = sock:send(cmd)
     if not bytes then
-        return nil, err
+        return nil, nil, err
     end
 
     local line, err = sock:receive()
     if not line then
-        return nil, err
+        return nil, nil, err
     end
 
     if line == 'END' then
-        return nil, nil
+        return nil, nil, nil
     end
 
-    local flags, len = match(line, [[^VALUE %S+ (%d+) (%d+)]])
+    local flags, len = match(line, '^VALUE %S+ (%d+) (%d+)$')
     if not flags then
-        return nil, "bad response: " .. line
+        return nil, nil, line
     end
 
-    -- print("size: ", size, ", flags: ", len)
+    -- print("len: ", len, ", flags: ", flags)
 
     local data, err = sock:receive(len)
     if not data then
@@ -70,6 +74,60 @@ function get(self, key)
     end
 
     return data, flags
+end
+
+
+function _multi_get(self, keys)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    if #keys == 0 then
+        return {}, nil
+    end
+
+    local args = {"get"}
+    for i, key in ipairs(keys) do
+        table.insert(args, " ")
+        table.insert(args, escape_uri(key))
+    end
+    table.insert(args, "\r\n")
+
+    local cmd = table.concat(args, "")
+    print("multi get cmd: ", cmd)
+
+    local bytes, err = sock:send(cmd)
+    if not bytes then
+        return nil, err
+    end
+
+    local results = {}
+    while true do
+        local line, err = sock:receive()
+        if not line then
+            return nil, err
+        end
+
+        if line == 'END' then
+            break
+        end
+
+        local key, flags, len = match(line, '^VALUE (%S+) (%d+) (%d+)$')
+        print("key: ", key, "len: ", len, ", flags: ", flags)
+
+        if key then
+
+            local data, err = sock:receive(len)
+            if not data then
+                return nil, err
+            end
+
+            results[key] = {data, flags}
+        end
+    end
+
+    return results
 end
 
 

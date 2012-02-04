@@ -3,6 +3,13 @@ Name
 
 ngx_lua - Lua memcached client driver for the ngx_lua based on the cosocket API
 
+Status
+======
+
+This library is considered experimental and still under active development.
+
+The API is still in flux and may change without notice.
+
 Description
 ===========
 
@@ -179,14 +186,23 @@ In case of success, returns `1`. In case of errors, returns `nil` with a string 
 get
 ---
 `syntax: value, flags, err = memc:get(key)`
+`syntax: results, err = memc:get(keys)`
 
-Get a single entry in the memcached server via a key.
+Get a single entry or multiple entries in the memcached server via a single key or a talbe of keys.
 
-If the entry is found and no error happens, value and flags will be returned accordingly.
+Let us first discuss the case When the key is a single string.
+
+The key's value and associated flags value will be returned if the entry is found and no error happens.
 
 In case of errors, `nil` values will be turned for `value` and `flags` and a 3rd (string) value will also be returned for describing the error.
 
-If the entry is not found, then two `nil` values will be returned.
+If the entry is not found, then three `nil` values will be returned.
+
+Then let us discuss the case when the a Lua table of multiple keys are provided.
+
+In this case, a Lua table holding the key-result pairs will be always returned in case of success. Each value corresponding each key in the table is also a table holding two values, the key's value and the key's flags. If a key does not exist, then there is no responding entries in the `results` table.
+
+In case of errors, `nil` will be returned, and the second return value will be a string describing the error.
 
 flush_all
 ---------
@@ -263,7 +279,7 @@ Returns `1` in case of success and `nil` other wise. In case of failures, anothe
 TODO
 ====
 
-* implement the Pipelining API.
+* implement the memcached pipelining API.
 * implement the "gets" method.
 * implement the "cas" method.
 * implement the UDP part of the memcached ascii protocol.
