@@ -608,6 +608,13 @@ dog: 3256
             end
 
             ngx.say("dog: ", res)
+
+            local res, flags, err = memc:add("dog", 772)
+            if err then
+                ngx.say("failed to add dog: ", err)
+                return
+            end
+
             memc:close()
         ';
     }
