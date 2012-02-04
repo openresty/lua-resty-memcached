@@ -201,3 +201,19 @@ The key to be deleted must already exist in memcached.
 
 In case of success, returns `1`. In case of errors, returns `nil` with a string describing the error.
 
+incr
+----
+`syntax: new_value, err = memc:incr(key, delta)`
+
+Increments the value of the specified key by the integer value specified in the `delta` argument.
+
+Returns the new value after incrementation in success, and `nil` with a string describing the error in case of failures.
+
+decr
+----
+`syntax: new_value, err = memc:decr(key, value)`
+
+Decrements the value of the specified key by the integer value specified in the `delta` argument.
+
+Returns the new value after decrementation in success, and `nil` with a string describing the error in case of failures.
+
