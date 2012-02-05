@@ -33,7 +33,7 @@ Synopsis
                 local memcached = require "resty.memcached"
                 local memc = memcached:new()
 
-                memc:settimeout(1000) -- 1 sec
+                memc:set_timeout(1000) -- 1 sec
 
                 -- or connect to a unix domain socket file listened
                 -- by a memcached server:
@@ -114,9 +114,9 @@ The `exptime` parameter is optional, defaults to `0`.
 
 The `flags` parameter is optional, defaults to `0`.
 
-settimeout
+set_timeout
 ----------
-`syntax: memc:settimeout(time)`
+`syntax: memc:set_timeout(time)`
 
 Sets the timeout (in ms) protection for subsequent operations, including the `connect` method.
 

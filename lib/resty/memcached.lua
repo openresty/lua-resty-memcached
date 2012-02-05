@@ -17,7 +17,7 @@ function new(self)
 end
 
 
-function settimeout(self, timeout)
+function set_timeout(self, timeout)
     local sock = self.sock
     if not sock then
         return nil, "not initialized"

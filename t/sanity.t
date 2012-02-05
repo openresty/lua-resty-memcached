@@ -29,7 +29,7 @@ __DATA__
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -81,7 +81,7 @@ dog: 32 (flags: 0)
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -139,7 +139,7 @@ dog: 32
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -190,7 +190,7 @@ dog: 56
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -248,7 +248,7 @@ dog: 56
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -306,7 +306,7 @@ dog: 56
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -358,7 +358,7 @@ dog not found
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -410,7 +410,7 @@ dog not found
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -466,7 +466,7 @@ dog: 5632
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -518,7 +518,7 @@ dog not found
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -574,7 +574,7 @@ dog: 3256
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -637,7 +637,7 @@ dog not found
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -689,7 +689,7 @@ dog not found
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -758,7 +758,7 @@ dog not found
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -810,7 +810,7 @@ dog: 32 (flags: 526)
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -868,7 +868,7 @@ dog: 32 (flags: 526)
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -926,7 +926,7 @@ dog: 32 (flags: 0)
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -987,7 +987,7 @@ dog: 34 (flags: 0)
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1041,7 +1041,7 @@ failed to incr dog: NOT_FOUND
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1102,7 +1102,7 @@ dog: 29 (flags: 0)
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1156,7 +1156,7 @@ failed to decr dog: NOT_FOUND
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1200,7 +1200,7 @@ STAT pid \d+
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1243,7 +1243,7 @@ GET /t
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1286,7 +1286,7 @@ GET /t
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1322,7 +1322,7 @@ GET /t
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1368,7 +1368,7 @@ GET /t
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1414,7 +1414,7 @@ successfully set verbosity to level 2
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1477,7 +1477,7 @@ blah: not found
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(1000) -- 1 sec
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
@@ -1541,7 +1541,7 @@ blah: not found
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(100) -- 100 ms
+            memc:set_timeout(100) -- 100 ms
 
             local ok, err = memc:connect("www.taobao.com", 11211)
             if not ok then
@@ -1593,7 +1593,7 @@ failed to connect: timeout
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:settimeout(100) -- 100 ms
+            memc:set_timeout(100) -- 100 ms
 
             local ok, err = memc:connect("127.0.0.1", 11211)
             if not ok then
