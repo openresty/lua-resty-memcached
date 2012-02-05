@@ -15,12 +15,12 @@ Description
 
 This Lua library is a memcached client driver for the ngx_lua nginx module:
 
-http://wiki.nginx.org/HttpLuaNginxModule
+http://wiki.nginx.org/HttpLuaModule
 
 This Lua library takes advantage of ngx_lua's cosocket API, which ensures
 100% nonblocking behavior.
 
-Note that at least ngx_lua 0.5.0rc1 or ngx_openresty 1.0.11.1 is required.
+Note that at least [ngx_lua 0.5.0rc1](https://github.com/chaoslawful/lua-nginx-module/tags) or [ngx_openresty 1.0.11.1](http://openresty.org/#Download) is required.
 
 Synopsis
 ========
@@ -308,6 +308,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 See Also
 ========
-* the ngx_lua module: http://wiki.nginx.org/HttpLuaNginxModule
+* the ngx_lua module: http://wiki.nginx.org/HttpLuaModule
 * the memcached wired protocol specification: http://code.sixapart.com/svn/memcached/trunk/server/doc/protocol.txt
 
