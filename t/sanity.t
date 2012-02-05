@@ -13,6 +13,8 @@ our $HttpConfig = qq{
     lua_package_path "$pwd/lib/?.lua;;";
 };
 
+$ENV{TEST_NGINX_RESOLVER} = '8.8.8.8';
+
 no_long_string();
 
 run_tests();
@@ -1525,6 +1527,59 @@ cat B: hello
 world
  0
 blah: not found
+--- no_error_log
+[error]
+
+
+
+=== TEST 29: connect timeout
+--- http_config eval: $::HttpConfig
+--- config
+    resolver $TEST_NGINX_RESOLVER;
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(100) -- 100 ms
+
+            local ok, err = memc:connect("www.taobao.com", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local res, flags, err = memc:get("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not res then
+                ngx.say("dog not found")
+                return
+            end
+
+            ngx.say("dog: ", res, " (flags: ", flags, ")")
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+failed to connect: timeout
 --- no_error_log
 [error]
 
