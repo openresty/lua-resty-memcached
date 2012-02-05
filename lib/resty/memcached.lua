@@ -7,6 +7,7 @@ local mt = { __index = resty.memcached }
 
 local sub = string.sub
 local escape_uri = ngx.escape_uri
+local unescape_uri = ngx.unescape_uri
 local match = string.match
 local tcp = ngx.socket.tcp
 
@@ -123,7 +124,7 @@ function _multi_get(self, keys)
                 return nil, err
             end
 
-            results[key] = {data, flags}
+            results[unescape_uri(key)] = {data, flags}
         end
     end
 

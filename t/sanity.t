@@ -1465,3 +1465,66 @@ blah: not found
 --- no_error_log
 [error]
 
+
+
+=== TEST 28: multi get (special chars in keys)
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog A", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local ok, err = memc:set("cat B", "hello\\nworld\\n")
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local results, err = memc:get({"dog A", "blah", "cat B"})
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not results then
+                ngx.say("results empty")
+                return
+            end
+
+            ngx.say("dog A: ", results["dog A"] and table.concat(results["dog A"], " ") or "not found")
+            ngx.say("cat B: ", results["cat B"] and table.concat(results["cat B"], " ") or "not found")
+            ngx.say("blah: ", results.blah and table.concat(results.blah, " ") or "not found")
+
+            local ok, err = memc:close()
+            if not ok then
+                ngx.say("failed to close: ", err)
+                return
+            end
+        ';
+    }
+--- request
+GET /t
+--- response_body
+dog A: 32 0
+cat B: hello
+world
+ 0
+blah: not found
+--- no_error_log
+[error]
+
