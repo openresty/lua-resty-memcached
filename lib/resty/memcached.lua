@@ -132,6 +132,103 @@ function _multi_get(self, keys)
 end
 
 
+function gets(self, key)
+    if type(key) == "table" then
+        return _multi_gets(self, key)
+    end
+
+    local sock = self.sock
+    if not sock then
+        return nil, nil, nil, "not initialized"
+    end
+
+    local cmd = "gets " .. escape_uri(key) .. "\r\n"
+    local bytes, err = sock:send(cmd)
+    if not bytes then
+        return nil, nil, err
+    end
+
+    local line, err = sock:receive()
+    if not line then
+        return nil, nil, nil, err
+    end
+
+    if line == 'END' then
+        return nil, nil, nil, nil
+    end
+
+    local flags, len, cas_uniq = match(line, '^VALUE %S+ (%d+) (%d+) (%d+)$')
+    if not flags then
+        return nil, nil, nil, line
+    end
+
+    -- print("len: ", len, ", flags: ", flags)
+
+    local data, err = sock:receive(len)
+    if not data then
+        return nil, nil, nil, err
+    end
+
+    return data, flags, cas_uniq
+end
+
+
+function _multi_gets(self, keys)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    if #keys == 0 then
+        return {}, nil
+    end
+
+    local args = {"gets"}
+    for i, key in ipairs(keys) do
+        table.insert(args, " ")
+        table.insert(args, escape_uri(key))
+    end
+    table.insert(args, "\r\n")
+
+    local cmd = table.concat(args, "")
+    -- print("multi get cmd: ", cmd)
+
+    local bytes, err = sock:send(cmd)
+    if not bytes then
+        return nil, err
+    end
+
+    local results = {}
+    while true do
+        local line, err = sock:receive()
+        if not line then
+            return nil, err
+        end
+
+        if line == 'END' then
+            break
+        end
+
+        local key, flags, len, cas_uniq =
+                match(line, '^VALUE (%S+) (%d+) (%d+) (%d+)$')
+
+        -- print("key: ", key, "len: ", len, ", flags: ", flags)
+
+        if key then
+
+            local data, err = sock:receive(len)
+            if not data then
+                return nil, err
+            end
+
+            results[unescape_uri(key)] = {data, flags, cas_uniq}
+        end
+    end
+
+    return results
+end
+
+
 function set(self, ...)
     return _store(self, "set", ...)
 end

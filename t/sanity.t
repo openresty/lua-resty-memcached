@@ -1355,7 +1355,7 @@ GET /t
 --- request
 GET /t
 --- response_body_like chop
-^failed to get version: (closed|timeout)$
+^failed to get version: (closed|timeout|error)$
 
 
 
@@ -1418,6 +1418,12 @@ successfully set verbosity to level 2
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
                 return
             end
 
@@ -1625,6 +1631,182 @@ GET /t
 --- response_body
 reused times: 0
 reused times: 1
+--- no_error_log
+[error]
+
+
+
+=== TEST 31: gets (single key, found)
+--- http_config eval: $::HttpConfig
+--- config
+    resolver $TEST_NGINX_RESOLVER;
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:set_timeout(100) -- 100 ms
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local res, flags, cas_uniq, err = memc:gets("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not res then
+                ngx.say("dog not found")
+                return
+            end
+
+            ngx.say("dog: ", res, " (flags: ", flags, ", cas_uniq: ", cas_uniq, ")")
+        ';
+    }
+--- request
+GET /t
+--- response_body_like chop
+^dog: 32 \(flags: 0, cas_uniq: \d+\)$
+--- no_error_log
+[error]
+
+
+
+=== TEST 32: gets (single key, not found)
+--- http_config eval: $::HttpConfig
+--- config
+    resolver $TEST_NGINX_RESOLVER;
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:set_timeout(100) -- 100 ms
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local res, flags, cas_uniq, err = memc:gets("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not res then
+                ngx.say("dog not found")
+                return
+            end
+
+            ngx.say("dog: ", res, " (flags: ", flags, ", cas_uniq: ", cas_uniq, ")")
+        ';
+    }
+--- request
+GET /t
+--- response_body_like chop
+dog not found
+--- no_error_log
+[error]
+
+
+
+=== TEST 33: gets (multiple key)
+--- http_config eval: $::HttpConfig
+--- config
+    resolver $TEST_NGINX_RESOLVER;
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:set_timeout(100) -- 100 ms
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local ok, err = memc:set("cat", "hello\\nworld\\n")
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local results, err = memc:gets({"dog", "blah", "cat"})
+            if err then
+                ngx.say("failed to get dog: ", err)
+                return
+            end
+
+            if not results then
+                ngx.say("results empty")
+                return
+            end
+
+            if results.dog then
+                ngx.say("dog: ", table.concat(results.dog, " "))
+            else
+                ngx.say("dog not found")
+            end
+
+            if results.blah then
+                ngx.say("blah: ", table.concat(results.blah, " "))
+            else
+                ngx.say("blah not found")
+            end
+
+            if results.cat then
+                ngx.say("cat: ", table.concat(results.cat, " "))
+            else
+                ngx.say("cat not found")
+            end
+
+            local ok, err = memc:close()
+            if not ok then
+                ngx.say("failed to close: ", err)
+                return
+            end
+        ';
+    }
+--- request
+GET /t
+--- response_body_like chop
+^dog: 32 0 \d+
+blah not found
+cat: hello
+world
+ 0 \d+$
 --- no_error_log
 [error]
 

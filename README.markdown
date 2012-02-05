@@ -217,6 +217,15 @@ In this case, a Lua table holding the key-result pairs will be always returned i
 
 In case of errors, `nil` will be returned, and the second return value will be a string describing the error.
 
+gets
+----
+`syntax: value, flags, cas_unique, err = memc:gets(key)`
+`syntax: results, err = memc:gets(keys)`
+
+Just like the `get` method, but will also return the CAS unique value associated with the entry in addition to the key's value and flags.
+
+This method is usually used together with the `cas` method.
+
 flush_all
 ---------
 `syntax: ok, err = memc:flush_all(key, time?)`
