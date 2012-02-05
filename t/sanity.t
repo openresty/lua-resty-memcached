@@ -5,7 +5,7 @@ use Cwd qw(cwd);
 
 repeat_each(2);
 
-plan tests => repeat_each() * (3 * blocks());
+plan tests => repeat_each() * (3 * blocks() - 1);
 
 my $pwd = cwd();
 
@@ -14,6 +14,7 @@ our $HttpConfig = qq{
 };
 
 $ENV{TEST_NGINX_RESOLVER} = '8.8.8.8';
+$ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 
 no_long_string();
 
@@ -31,7 +32,7 @@ __DATA__
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -83,7 +84,7 @@ dog: 32 (flags: 0)
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -141,7 +142,7 @@ dog: 32
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -192,7 +193,7 @@ dog: 56
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -250,7 +251,7 @@ dog: 56
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -308,7 +309,7 @@ dog: 56
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -360,7 +361,7 @@ dog not found
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -412,7 +413,7 @@ dog not found
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -468,7 +469,7 @@ dog: 5632
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -520,7 +521,7 @@ dog not found
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -576,7 +577,7 @@ dog: 3256
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -639,7 +640,7 @@ dog not found
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -691,7 +692,7 @@ dog not found
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -760,7 +761,7 @@ dog not found
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -812,7 +813,7 @@ dog: 32 (flags: 526)
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -870,7 +871,7 @@ dog: 32 (flags: 526)
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -928,7 +929,7 @@ dog: 32 (flags: 0)
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -989,7 +990,7 @@ dog: 34 (flags: 0)
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1043,7 +1044,7 @@ failed to incr dog: NOT_FOUND
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1104,7 +1105,7 @@ dog: 29 (flags: 0)
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1158,7 +1159,7 @@ failed to decr dog: NOT_FOUND
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1202,7 +1203,7 @@ STAT pid \d+
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1245,7 +1246,7 @@ GET /t
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1288,7 +1289,7 @@ GET /t
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1322,9 +1323,9 @@ GET /t
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(1000) -- 1 sec
+            memc:set_timeout(100) -- 100 ms
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1354,9 +1355,7 @@ GET /t
 --- request
 GET /t
 --- response_body_like chop
-^failed to get version: \S.*$
---- no_error_log
-[error]
+^failed to get version: (closed|timeout)$
 
 
 
@@ -1370,7 +1369,7 @@ GET /t
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1416,7 +1415,7 @@ successfully set verbosity to level 2
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1479,7 +1478,7 @@ blah: not found
 
             memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1543,7 +1542,7 @@ blah: not found
 
             memc:set_timeout(100) -- 100 ms
 
-            local ok, err = memc:connect("www.taobao.com", 11211)
+            local ok, err = memc:connect("www.taobao.com", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1595,7 +1594,7 @@ failed to connect: timeout
 
             memc:set_timeout(100) -- 100 ms
 
-            local ok, err = memc:connect("127.0.0.1", 11211)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1610,7 +1609,7 @@ failed to connect: timeout
                 return
             end
 
-            ok, err = memc:connect("127.0.0.1", 11211)
+            ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
