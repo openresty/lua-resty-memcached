@@ -96,7 +96,7 @@ function _multi_get(self, keys)
     table.insert(args, "\r\n")
 
     local cmd = table.concat(args, "")
-    print("multi get cmd: ", cmd)
+    -- print("multi get cmd: ", cmd)
 
     local bytes, err = sock:send(cmd)
     if not bytes then
@@ -115,7 +115,7 @@ function _multi_get(self, keys)
         end
 
         local key, flags, len = match(line, '^VALUE (%S+) (%d+) (%d+)$')
-        print("key: ", key, "len: ", len, ", flags: ", flags)
+        -- print("key: ", key, "len: ", len, ", flags: ", flags)
 
         if key then
 
@@ -233,6 +233,16 @@ function set_keepalive(self, ...)
     end
 
     return sock:setkeepalive(...)
+end
+
+
+function get_reused_times(self)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    return sock:getreusedtimes()
 end
 
 

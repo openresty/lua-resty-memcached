@@ -1583,3 +1583,48 @@ failed to connect: timeout
 --- no_error_log
 [error]
 
+
+=== TEST 29: set keepalive
+--- http_config eval: $::HttpConfig
+--- config
+    resolver $TEST_NGINX_RESOLVER;
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:settimeout(100) -- 100 ms
+
+            local ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local times = memc:get_reused_times()
+            ngx.say("reused times: ", times)
+
+            local ok, err = memc:set_keepalive()
+            if not ok then
+                ngx.say("failed to set keepalive: ", err)
+                return
+            end
+
+            ok, err = memc:connect("127.0.0.1", 11211)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            times = memc:get_reused_times()
+            ngx.say("reused times: ", times)
+        ';
+    }
+--- request
+GET /t
+--- response_body
+reused times: 0
+reused times: 1
+--- no_error_log
+[error]
+

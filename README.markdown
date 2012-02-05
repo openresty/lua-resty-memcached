@@ -72,7 +72,7 @@ Synopsis
 
                 -- put it into the connection pool of size 100,
                 -- with 0 idle timeout
-                memc:setkeepalive(0, 100)
+                memc:set_keepalive(0, 100)
 
                 -- or just close the connection right away:
                 -- local ok, err = memc:close()
@@ -100,7 +100,9 @@ connect
 `syntax: ok, err = memc:connect(host, port)`
 `syntax: ok, err = memc:connect("unix:/path/to/unix.sock")`
 
-Connects to the remote host and port that the memcached server is listening to or a local unix domain socket file listened by the memcached server.
+Attempts to Connect to the remote host and port that the memcached server is listening to or a local unix domain socket file listened by the memcached server.
+
+Before actually resolving the host name and connecting to the remote backend, this method will always look up the connection pool for matched idle connections created by previous calls of this method.
 
 set
 ---
@@ -118,13 +120,24 @@ settimeout
 
 Sets the timeout (in ms) protection for subsequent operations, including the `connect` method.
 
-setkeepalive
+set_keepalive
 ------------
-`syntax: memc:setkeepalive(max_idle_timeout, pool_size)`
+`syntax: ok, err = memc:set_keepalive(max_idle_timeout, pool_size)`
 
 Keeps the current memcached connection alive and put it into the ngx_lua cosocket connection pool.
 
 You can specify the max idle timeout (in ms) when the connection is in the pool and the maximal size of the pool every nginx worker process.
+
+In case of success, returns `1`. In case of errors, returns `nil` with a string describing the error.
+
+get_reused_times
+----------------
+`syntax: memc:set_keepalive(max_idle_timeout, pool_size)`
+
+This method returns the (successfully) reused times for the current connection. In case of error, it returns `nil` and a string describing the error.
+
+
+If the current connection does not come from the built-in connection pool, then this method always returns `0`, that is, the connection has never been reused (yet). If the connection comes from the connection pool, then the return value is always non-zero. So this method can also be used to determine if the current connection comes from the pool.
 
 close
 -----
