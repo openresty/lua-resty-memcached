@@ -74,6 +74,16 @@ function get(self, key)
         return nil, nil, err
     end
 
+    line, err = sock:receive(2) -- discard the trailing CRLF
+    if line ~= "\r\n" then
+        return nil, nil, nil, "bad response: no trailing CRLF after data chunk"
+    end
+
+    line, err = sock:receive() -- discard "END\r\n"
+    if not line then
+        return nil, nil, nil, err
+    end
+
     return data, flags
 end
 
@@ -125,6 +135,11 @@ function _multi_get(self, keys)
             end
 
             results[unescape_uri(key)] = {data, flags}
+
+            data, err = sock:receive(2) -- discard the trailing CRLF
+            if data ~= "\r\n" then
+                return nil, "bad response, no trailing CRLF after data chunk"
+            end
         end
     end
 
@@ -166,6 +181,16 @@ function gets(self, key)
 
     local data, err = sock:receive(len)
     if not data then
+        return nil, nil, nil, err
+    end
+
+    line, err = sock:receive(2) -- discard the trailing CRLF
+    if line ~= "\r\n" then
+        return nil, nil, nil, "bad response: no trailing CRLF after data chunk"
+    end
+
+    line, err = sock:receive() -- discard "END\r\n"
+    if not line then
         return nil, nil, nil, err
     end
 
@@ -222,6 +247,11 @@ function _multi_gets(self, keys)
             end
 
             results[unescape_uri(key)] = {data, flags, cas_uniq}
+
+            data, err = sock:receive(2) -- discard the trailing CRLF
+            if data ~= "\r\n" then
+                return nil, "bad response, no trailing CRLF after data chunk"
+            end
         end
     end
 
@@ -287,6 +317,47 @@ function _store(self, cmd, key, value, exptime, flags)
     end
 
     return nil, data
+end
+
+
+function cas(self, key, value, cas_uniq, exptime, flags)
+    if not exptime then
+        exptime = 0
+    end
+
+    if not flags then
+        flags = 0
+    end
+
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local request = table.concat({"cas ", escape_uri(key), " ", flags, " ",
+                                 exptime, " ", string.len(value), " ", cas_uniq,
+                                 "\r\n", value, "\r\n"}, "")
+
+    local cjson = require "cjson"
+    -- print("request: ", cjson.encode(request))
+
+    local bytes, err = sock:send(request)
+    if not bytes then
+        return nil, err
+    end
+
+    local line, err = sock:receive()
+    if not line then
+        return nil, err
+    end
+
+    -- print("response: [", line, "]")
+
+    if line == "STORED" then
+        return 1
+    end
+
+    return nil, line
 end
 
 

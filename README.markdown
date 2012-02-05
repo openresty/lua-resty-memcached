@@ -226,6 +226,15 @@ Just like the `get` method, but will also return the CAS unique value associated
 
 This method is usually used together with the `cas` method.
 
+cas
+---
+`syntax: ok, err = memc:cas(key, value, cas_unique, exptime?, flags?)`
+
+Just like the `set` method but does a check and set operation, which means "store this data but
+  only if no one else has updated since I last fetched it."
+
+The `cas_unique` argument can be obtained from the `gets` method.
+
 flush_all
 ---------
 `syntax: ok, err = memc:flush_all(key, time?)`
