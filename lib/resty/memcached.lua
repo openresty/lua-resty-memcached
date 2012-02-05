@@ -283,7 +283,8 @@ function _incr_decr(self, cmd, key, value)
         return nil, "not initialized"
     end
 
-    local request = table.concat({cmd, " ", escape_uri(key), " ", value, "\r\n"}, "")
+    local request = table.concat({cmd, " ", escape_uri(key), " ", value,
+                                 "\r\n"}, "")
 
     local bytes, err = sock:send(request)
     if not bytes then
