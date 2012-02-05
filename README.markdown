@@ -311,8 +311,6 @@ TODO
 ====
 
 * implement the memcached pipelining API.
-* implement the "gets" method.
-* implement the "cas" method.
 * implement the UDP part of the memcached ascii protocol.
 
 Author
