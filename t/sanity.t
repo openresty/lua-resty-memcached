@@ -1583,7 +1583,8 @@ failed to connect: timeout
 [error]
 
 
-=== TEST 29: set keepalive
+
+=== TEST 30: set keepalive
 --- http_config eval: $::HttpConfig
 --- config
     resolver $TEST_NGINX_RESOLVER;
