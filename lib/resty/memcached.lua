@@ -47,7 +47,7 @@ function get(self, key)
         return nil, nil, "not initialized"
     end
 
-    local cmd = "get " .. escape_uri(key) .. "\r\n"
+    local cmd = {"get ", escape_uri(key), "\r\n"}
     local bytes, err = sock:send(cmd)
     if not bytes then
         return nil, nil, err
@@ -98,14 +98,13 @@ function _multi_get(self, keys)
         return {}, nil
     end
 
-    local args = {"get"}
+    local cmd = {"get"}
     for i, key in ipairs(keys) do
-        table.insert(args, " ")
-        table.insert(args, escape_uri(key))
+        table.insert(cmd, " ")
+        table.insert(cmd, escape_uri(key))
     end
-    table.insert(args, "\r\n")
+    table.insert(cmd, "\r\n")
 
-    local cmd = table.concat(args, "")
     -- print("multi get cmd: ", cmd)
 
     local bytes, err = sock:send(cmd)
@@ -157,7 +156,7 @@ function gets(self, key)
         return nil, nil, nil, "not initialized"
     end
 
-    local cmd = "gets " .. escape_uri(key) .. "\r\n"
+    local cmd = {"gets ", escape_uri(key), "\r\n"}
     local bytes, err = sock:send(cmd)
     if not bytes then
         return nil, nil, err
@@ -208,14 +207,13 @@ function _multi_gets(self, keys)
         return {}, nil
     end
 
-    local args = {"gets"}
+    local cmd = {"gets"}
     for i, key in ipairs(keys) do
-        table.insert(args, " ")
-        table.insert(args, escape_uri(key))
+        table.insert(cmd, " ")
+        table.insert(cmd, escape_uri(key))
     end
-    table.insert(args, "\r\n")
+    table.insert(cmd, "\r\n")
 
-    local cmd = table.concat(args, "")
     -- print("multi get cmd: ", cmd)
 
     local bytes, err = sock:send(cmd)
@@ -298,11 +296,10 @@ function _store(self, cmd, key, value, exptime, flags)
         return nil, "not initialized"
     end
 
-    local request = table.concat({cmd, " ", escape_uri(key), " ", flags, " ",
-                             exptime, " ", string.len(value), "\r\n", value,
-                             "\r\n"}, "")
+    local req = {cmd, " ", escape_uri(key), " ", flags, " ", exptime, " ",
+                 string.len(value), "\r\n", value, "\r\n"}
 
-    local bytes, err = sock:send(request)
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -334,14 +331,13 @@ function cas(self, key, value, cas_uniq, exptime, flags)
         return nil, "not initialized"
     end
 
-    local request = table.concat({"cas ", escape_uri(key), " ", flags, " ",
-                                 exptime, " ", string.len(value), " ", cas_uniq,
-                                 "\r\n", value, "\r\n"}, "")
+    local req = {"cas ", escape_uri(key), " ", flags, " ", exptime, " ",
+                 string.len(value), " ", cas_uniq, "\r\n", value, "\r\n"}
 
-    local cjson = require "cjson"
-    -- print("request: ", cjson.encode(request))
+    -- local cjson = require "cjson"
+    -- print("request: ", cjson.encode(req))
 
-    local bytes, err = sock:send(request)
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -369,14 +365,14 @@ function delete(self, key, time)
 
     key = escape_uri(key)
 
-    local request
+    local req
     if time then
-        request = table.concat({"delete ", key, " ", time, "\r\n"}, "")
+        req = {"delete ", key, " ", time, "\r\n"}
     else
-        request = "delete " .. key .. "\r\n"
+        req = {"delete ", key, "\r\n"}
     end
 
-    local bytes, err = sock:send(request)
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -420,14 +416,14 @@ function flush_all(self, time)
         return nil, "not initialized"
     end
 
-    local request
+    local req
     if time then
-        request = "flush_all " .. time .. "\r\n"
+        req = {"flush_all ", time, "\r\n"}
     else
-        request = "flush_all\r\n"
+        req = "flush_all\r\n"
     end
 
-    local bytes, err = sock:send(request)
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -451,10 +447,9 @@ function _incr_decr(self, cmd, key, value)
         return nil, "not initialized"
     end
 
-    local request = table.concat({cmd, " ", escape_uri(key), " ", value,
-                                 "\r\n"}, "")
+    local req = {cmd, " ", escape_uri(key), " ", value, "\r\n"}
 
-    local bytes, err = sock:send(request)
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -488,14 +483,14 @@ function stats(self, args)
         return nil, "not initialized"
     end
 
-    local request
+    local req
     if args then
-        request = "stats " .. args .. "\r\n"
+        req = {"stats ", args, "\r\n"}
     else
-        request = "stats\r\n"
+        req = "stats\r\n"
     end
 
-    local bytes, err = sock:send(request)
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -569,7 +564,7 @@ function verbosity(self, level)
         return nil, "not initialized"
     end
 
-    local bytes, err = sock:send("verbosity " .. level .. "\r\n")
+    local bytes, err = sock:send({"verbosity ", level, "\r\n"})
     if not bytes then
         return nil, err
     end
