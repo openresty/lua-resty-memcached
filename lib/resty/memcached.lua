@@ -75,8 +75,8 @@ function get(self, key)
     end
 
     line, err = sock:receive(2) -- discard the trailing CRLF
-    if line ~= "\r\n" then
-        return nil, nil, nil, "bad response: no trailing CRLF after data chunk"
+    if not line then
+        return nil, nil, nil, err
     end
 
     line, err = sock:receive() -- discard "END\r\n"
@@ -136,8 +136,8 @@ function _multi_get(self, keys)
             results[unescape_uri(key)] = {data, flags}
 
             data, err = sock:receive(2) -- discard the trailing CRLF
-            if data ~= "\r\n" then
-                return nil, "bad response, no trailing CRLF after data chunk"
+            if not data then
+                return nil, err
             end
         end
     end
@@ -184,8 +184,8 @@ function gets(self, key)
     end
 
     line, err = sock:receive(2) -- discard the trailing CRLF
-    if line ~= "\r\n" then
-        return nil, nil, nil, "bad response: no trailing CRLF after data chunk"
+    if not line then
+        return nil, nil, nil, err
     end
 
     line, err = sock:receive() -- discard "END\r\n"
@@ -247,8 +247,8 @@ function _multi_gets(self, keys)
             results[unescape_uri(key)] = {data, flags, cas_uniq}
 
             data, err = sock:receive(2) -- discard the trailing CRLF
-            if data ~= "\r\n" then
-                return nil, "bad response, no trailing CRLF after data chunk"
+            if not data then
+                return nil, err
             end
         end
     end
