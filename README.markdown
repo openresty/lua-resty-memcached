@@ -339,4 +339,5 @@ See Also
 ========
 * the ngx_lua module: http://wiki.nginx.org/HttpLuaModule
 * the memcached wired protocol specification: http://code.sixapart.com/svn/memcached/trunk/server/doc/protocol.txt
+* the lua-resty-redis library: https://github.com/agentzh/lua-resty-redis
 

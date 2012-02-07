@@ -1607,7 +1607,7 @@ failed to connect: timeout
 
 
 
-=== TEST 30: set keepalive
+=== TEST 30: set keepalive and get reused times
 --- http_config eval: $::HttpConfig
 --- config
     resolver $TEST_NGINX_RESOLVER;
