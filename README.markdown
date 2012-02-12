@@ -25,7 +25,7 @@ Note that at least [ngx_lua 0.5.0rc3](https://github.com/chaoslawful/lua-nginx-m
 Synopsis
 ========
 
-    lua_package_path "/path/to/lua-resty-memcached/lib/?.lua;;"
+    lua_package_path "/path/to/lua-resty-memcached/lib/?.lua;;";
 
     server {
         location /test {
