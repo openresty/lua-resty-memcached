@@ -100,7 +100,7 @@ connect
 `syntax: ok, err = memc:connect(host, port)`
 `syntax: ok, err = memc:connect("unix:/path/to/unix.sock")`
 
-Attempts to Connect to the remote host and port that the memcached server is listening to or a local unix domain socket file listened by the memcached server.
+Attempts to connect to the remote host and port that the memcached server is listening to or a local unix domain socket file listened by the memcached server.
 
 Before actually resolving the host name and connecting to the remote backend, this method will always look up the connection pool for matched idle connections created by previous calls of this method.
 
