@@ -98,6 +98,7 @@ Creates a memcached object. Returns `nil` on error.
 connect
 -------
 `syntax: ok, err = memc:connect(host, port)`
+
 `syntax: ok, err = memc:connect("unix:/path/to/unix.sock")`
 
 Attempts to connect to the remote host and port that the memcached server is listening to or a local unix domain socket file listened by the memcached server.
@@ -220,6 +221,7 @@ In case of errors, `nil` will be returned, and the second return value will be a
 gets
 ----
 `syntax: value, flags, cas_unique, err = memc:gets(key)`
+
 `syntax: results, err = memc:gets(keys)`
 
 Just like the `get` method, but will also return the CAS unique value associated with the entry in addition to the key's value and flags.
