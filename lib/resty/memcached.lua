@@ -50,12 +50,12 @@ function get(self, key)
     local cmd = {"get ", escape_uri(key), "\r\n"}
     local bytes, err = sock:send(cmd)
     if not bytes then
-        return nil, nil, err
+        return nil, nil, "failed to send command: " .. (err or "")
     end
 
     local line, err = sock:receive()
     if not line then
-        return nil, nil, err
+        return nil, nil, "failed to receive 1st line: " .. (err or "")
     end
 
     if line == 'END' then
@@ -64,24 +64,24 @@ function get(self, key)
 
     local flags, len = match(line, '^VALUE %S+ (%d+) (%d+)$')
     if not flags then
-        return nil, nil, line
+        return nil, nil, "bad line: " .. line
     end
 
     -- print("len: ", len, ", flags: ", flags)
 
     local data, err = sock:receive(len)
     if not data then
-        return nil, nil, err
+        return nil, nil, "failed to receive data chunk: " .. (err or "")
     end
 
     line, err = sock:receive(2) -- discard the trailing CRLF
     if not line then
-        return nil, nil, nil, err
+        return nil, nil, "failed to receive CRLF: " .. (err or "")
     end
 
     line, err = sock:receive() -- discard "END\r\n"
     if not line then
-        return nil, nil, nil, err
+        return nil, nil, "failed to receive END CRLF: " .. (err or "")
     end
 
     return data, flags
