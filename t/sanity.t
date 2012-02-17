@@ -1602,8 +1602,8 @@ blah: not found
 GET /t
 --- response_body
 failed to connect: timeout
---- no_error_log
-[error]
+--- error_log
+lua socket connect timed out
 
 
 
