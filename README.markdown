@@ -248,9 +248,9 @@ In case of success, returns `1`. In case of errors, returns `nil` with a string 
 
 delete
 ------
-`syntax: ok, err = memc:delete(key, time?)`
+`syntax: ok, err = memc:delete(key)`
 
-Deletes the key from memcached immediately (by default) or after a delay (in seconds) specified by the optional `time` argument.
+Deletes the key from memcached immediately.
 
 The key to be deleted must already exist in memcached.
 
