@@ -357,7 +357,7 @@ function cas(self, key, value, cas_uniq, exptime, flags)
 end
 
 
-function delete(self, key, time)
+function delete(self, key)
     local sock = self.sock
     if not sock then
         return nil, "not initialized"
@@ -365,12 +365,7 @@ function delete(self, key, time)
 
     key = escape_uri(key)
 
-    local req
-    if time then
-        req = {"delete ", key, " ", time, "\r\n"}
-    else
-        req = {"delete ", key, "\r\n"}
-    end
+    local req = {"delete ", key, "\r\n"}
 
     local bytes, err = sock:send(req)
     if not bytes then

@@ -687,6 +687,7 @@ dog not found
 
 
 === TEST 13: delete an exsistent key with delay
+--- SKIP
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -1277,7 +1278,7 @@ GET /t
 GET /t
 --- response_body_like chop
 ^stats:
-(?:\d+ \d+\n)*$
+(?:STAT \d+ \d+\n)*$
 --- no_error_log
 [error]
 
