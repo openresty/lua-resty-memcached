@@ -2,6 +2,7 @@
 
 module("resty.memcached", package.seeall)
 
+_VERSION = '0.06'
 
 local mt = { __index = resty.memcached }
 
