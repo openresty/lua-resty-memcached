@@ -1328,7 +1328,7 @@ GET /t
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(100) -- 100 ms
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
@@ -1617,7 +1617,7 @@ lua socket connect timed out
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(100) -- 100 ms
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
@@ -1663,7 +1663,7 @@ reused times: 1
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(100) -- 100 ms
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
@@ -1709,7 +1709,7 @@ GET /t
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(100) -- 100 ms
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
@@ -1755,7 +1755,7 @@ dog not found
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(100) -- 100 ms
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
@@ -1839,7 +1839,7 @@ world
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(100) -- 100 ms
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
@@ -1904,7 +1904,7 @@ dog: hello world \(flags: 78\)$
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(100) -- 100 ms
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
@@ -1971,7 +1971,7 @@ dog: hello world \(flags: 78\)$
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(100) -- 100 ms
+            memc:set_timeout(1000) -- 1 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
