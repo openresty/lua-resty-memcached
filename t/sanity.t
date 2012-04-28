@@ -830,12 +830,6 @@ dog: 32 (flags: 526)
                 return
             end
 
-            local ok, err = memc:set("dog", 32, 1, 526)
-            if not ok then
-                ngx.say("failed to set dog: ", err)
-                return
-            end
-
             local res, flags, err = memc:get("dog")
             if err then
                 ngx.say("failed to get dog: ", err)
@@ -843,6 +837,12 @@ dog: 32 (flags: 526)
             end
 
             ngx.location.capture("/sleep");
+
+            local ok, err = memc:set("dog", 32, 1, 526)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
 
             if not res then
                 ngx.say("dog not found")
@@ -855,12 +855,12 @@ dog: 32 (flags: 526)
     }
 
     location /sleep {
-        echo_sleep 1.01;
+        echo_sleep 1.1;
     }
 --- request
 GET /t
 --- response_body
-dog: 32 (flags: 526)
+dog not found
 --- no_error_log
 [error]
 
@@ -894,7 +894,7 @@ dog: 32 (flags: 526)
                 return
             end
 
-            local ok, err = memc:flush_all(2)
+            local ok, err = memc:flush_all(3)
             if not ok then
                 ngx.say("failed to flush all: ", err)
                 return
