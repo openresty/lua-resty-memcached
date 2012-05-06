@@ -13,6 +13,7 @@ local match = string.match
 local tcp = ngx.socket.tcp
 local strlen = string.len
 
+
 function new(self)
     return setmetatable({ sock = tcp() }, mt)
 end
@@ -290,10 +291,11 @@ function _value_len(value)
             len = len + _value_len(v)
         end
         return len
-    else
-        return strlen(value)
     end
+
+    return strlen(value)
 end
+
 
 function _store(self, cmd, key, value, exptime, flags)
     if not exptime then

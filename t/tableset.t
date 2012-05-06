@@ -77,7 +77,8 @@ dog: cat (flags: 0)
 [error]
 
 
-=== TEST 1: set with nested table
+
+=== TEST 2: set with nested table
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
