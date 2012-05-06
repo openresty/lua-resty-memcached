@@ -11,7 +11,7 @@ local escape_uri = ngx.escape_uri
 local unescape_uri = ngx.unescape_uri
 local match = string.match
 local tcp = ngx.socket.tcp
-
+local strlen = string.len
 
 function new(self)
     return setmetatable({ sock = tcp() }, mt)
@@ -283,6 +283,18 @@ function prepend(self, ...)
 end
 
 
+function _value_len(value)
+    if type(value) == "table" then
+        local len = 0
+        for _, v in ipairs(value) do
+            len = len + _value_len(v)
+        end
+        return len
+    else
+        return strlen(value)
+    end
+end
+
 function _store(self, cmd, key, value, exptime, flags)
     if not exptime then
         exptime = 0
@@ -298,7 +310,7 @@ function _store(self, cmd, key, value, exptime, flags)
     end
 
     local req = {cmd, " ", escape_uri(key), " ", flags, " ", exptime, " ",
-                 string.len(value), "\r\n", value, "\r\n"}
+                 _value_len(value), "\r\n", value, "\r\n"}
 
     local bytes, err = sock:send(req)
     if not bytes then
