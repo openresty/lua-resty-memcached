@@ -366,6 +366,12 @@ Sets the verbosity level used by the memcached server. The `level` argument shou
 
 Returns `1` in case of success and `nil` other wise. In case of failures, another string value will also be returned to describe the error.
 
+Limitations
+===========
+
+* This library cannot be used in code contexts like set_by_lua*, log_by_lua*, and
+header_filter_by_lua* where the ngx_lua cosocket API is not available.
+
 TODO
 ====
 
