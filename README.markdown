@@ -296,13 +296,12 @@ The `cas_unique` argument can be obtained from the `gets` method.
 
 flush_all
 ---------
-`syntax: ok, err = memc:flush_all(key, time?)`
+`syntax: ok, err = memc:flush_all(time?)`
 
 Flushes (or invalidates) all the existing entries in the memcached server immediately (by default) or after the expiration
 specified by the `time` argument (in seconds).
 
 In case of success, returns `1`. In case of errors, returns `nil` with a string describing the error.
-
 
 delete
 ------
