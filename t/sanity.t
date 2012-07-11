@@ -1604,7 +1604,7 @@ GET /t
 --- response_body
 failed to connect: timeout
 --- error_log
-lua socket connect timed out
+lua tcp socket connect timed out
 
 
 
