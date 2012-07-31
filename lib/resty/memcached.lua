@@ -2,9 +2,9 @@
 
 module("resty.memcached", package.seeall)
 
+
 _VERSION = '0.07'
 
-local mt = { __index = resty.memcached }
 
 local sub = string.sub
 local escape_uri = ngx.escape_uri
@@ -12,6 +12,11 @@ local unescape_uri = ngx.unescape_uri
 local match = string.match
 local tcp = ngx.socket.tcp
 local strlen = string.len
+
+
+local class = resty.memcached
+
+local mt = { __index = class }
 
 
 function new(self)
@@ -607,7 +612,7 @@ end
 
 
 -- to prevent use of casual module global variables
-getmetatable(resty.memcached).__newindex = function (table, key, val)
+getmetatable(class).__newindex = function (table, key, val)
     error('attempt to write to undeclared variable "' .. key .. '": '
             .. debug.traceback())
 end
