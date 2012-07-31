@@ -29,7 +29,11 @@ Synopsis
         location /test {
             content_by_lua '
                 local memcached = require "resty.memcached"
-                local memc = memcached:new()
+                local memc, err = memcached:new()
+                if not memc then
+                    ngx.say("failed to instantiate memc: ", err)
+                    return
+                end
 
                 memc:set_timeout(1000) -- 1 sec
 
@@ -89,9 +93,9 @@ The `key` argument provided in the following methods will be automatically escap
 
 new
 ---
-`syntax: memc = memcached:new()`
+`syntax: memc, err = memcached:new()`
 
-Creates a memcached object. Returns `nil` on error.
+Creates a memcached object. In case of failures, returns `nil` and a string describing the error.
 
 connect
 -------
