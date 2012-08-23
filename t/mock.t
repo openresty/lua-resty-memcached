@@ -5,7 +5,7 @@ use Cwd qw(cwd);
 
 repeat_each(2);
 
-plan tests => repeat_each() * (4 * blocks());
+plan tests => repeat_each() * (4 * blocks() + 1);
 
 my $pwd = cwd();
 
@@ -52,6 +52,7 @@ __DATA__
 --- request
 GET /t
 --- tcp_listen: 1921
+--- tcp_query_len: 11
 --- tcp_query eval
 "flush_all\r\n"
 --- tcp_reply eval
