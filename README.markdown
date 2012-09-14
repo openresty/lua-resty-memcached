@@ -135,6 +135,26 @@ set_timeout
 
 Sets the timeout (in ms) protection for subsequent operations, including the `connect` method.
 
+set_escape_key_method
+---------------------
+`syntax: memc:set_escape_key_method(method)`
+
+Specify a function to escape the key beforing inserting it in memc, for example
+
+    memc:set_escape_key_method(ngx.encode_base64)
+
+Note: the default is ngx.escape_uri
+
+set_unescape_key_method
+-----------------------
+`syntax: memc:set_unescape_key_method(method)`
+
+Specify a function to unescape the key fetched from memc, for example
+
+    memc:set_unescape_key_method(ngx.decode_base64)
+
+Note: the default is ngx.unescape_uri
+
 set_keepalive
 ------------
 `syntax: ok, err = memc:set_keepalive(max_idle_timeout, pool_size)`
