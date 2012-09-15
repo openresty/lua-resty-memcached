@@ -7,8 +7,6 @@ _VERSION = '0.07'
 
 
 local sub = string.sub
-local escape_uri = ngx.escape_uri
-local unescape_uri = ngx.unescape_uri
 local match = string.match
 local tcp = ngx.socket.tcp
 local strlen = string.len
@@ -19,12 +17,33 @@ local class = resty.memcached
 local mt = { __index = class }
 
 
-function new(self)
+function new(self, opts)
     local sock, err = tcp()
     if not sock then
         return nil, err
     end
-    return setmetatable({ sock = sock }, mt)
+
+    local escape_key_method = ngx.escape_uri
+    local unescape_key_method = ngx.unescape_uri
+
+    if opts then
+       local key_transform = opts.key_transform
+
+       if key_transform and type(key_transform) == "table" then
+          escape_key_method = key_transform[1]
+          unescape_key_method = key_transform[2]
+          if not escape_key_method or not unescape_key_method then
+             return nil, "expecting key_transform = { escape, unescape } table"
+          end
+       end
+    end
+
+    return setmetatable(
+       {
+          sock = sock,
+          escape_key_method = escape_key_method,
+          unescape_key_method = unescape_key_method,
+       }, mt)
 end
 
 
@@ -58,7 +77,7 @@ function get(self, key)
         return nil, nil, "not initialized"
     end
 
-    local cmd = {"get ", escape_uri(key), "\r\n"}
+    local cmd = {"get ", self.escape_key_method(key), "\r\n"}
     local bytes, err = sock:send(cmd)
     if not bytes then
         return nil, nil, "failed to send command: " .. (err or "")
@@ -112,7 +131,7 @@ function _multi_get(self, keys)
     local cmd = {"get"}
     for i, key in ipairs(keys) do
         table.insert(cmd, " ")
-        table.insert(cmd, escape_uri(key))
+        table.insert(cmd, self.escape_key_method(key))
     end
     table.insert(cmd, "\r\n")
 
@@ -144,7 +163,7 @@ function _multi_get(self, keys)
                 return nil, err
             end
 
-            results[unescape_uri(key)] = {data, flags}
+            results[self.unescape_key_method(key)] = {data, flags}
 
             data, err = sock:receive(2) -- discard the trailing CRLF
             if not data then
@@ -167,7 +186,7 @@ function gets(self, key)
         return nil, nil, nil, "not initialized"
     end
 
-    local cmd = {"gets ", escape_uri(key), "\r\n"}
+    local cmd = {"gets ", self.escape_key_method(key), "\r\n"}
     local bytes, err = sock:send(cmd)
     if not bytes then
         return nil, nil, err
@@ -221,7 +240,7 @@ function _multi_gets(self, keys)
     local cmd = {"gets"}
     for i, key in ipairs(keys) do
         table.insert(cmd, " ")
-        table.insert(cmd, escape_uri(key))
+        table.insert(cmd, self.escape_key_method(key))
     end
     table.insert(cmd, "\r\n")
 
@@ -255,7 +274,7 @@ function _multi_gets(self, keys)
                 return nil, err
             end
 
-            results[unescape_uri(key)] = {data, flags, cas_uniq}
+            results[self.unescape_key_method(key)] = {data, flags, cas_uniq}
 
             data, err = sock:receive(2) -- discard the trailing CRLF
             if not data then
@@ -320,7 +339,7 @@ function _store(self, cmd, key, value, exptime, flags)
         return nil, "not initialized"
     end
 
-    local req = {cmd, " ", escape_uri(key), " ", flags, " ", exptime, " ",
+    local req = {cmd, " ", self.escape_key_method(key), " ", flags, " ", exptime, " ",
                  _value_len(value), "\r\n", value, "\r\n"}
 
     local bytes, err = sock:send(req)
@@ -355,7 +374,7 @@ function cas(self, key, value, cas_uniq, exptime, flags)
         return nil, "not initialized"
     end
 
-    local req = {"cas ", escape_uri(key), " ", flags, " ", exptime, " ",
+    local req = {"cas ", self.escape_key_method(key), " ", flags, " ", exptime, " ",
                  string.len(value), " ", cas_uniq, "\r\n", value, "\r\n"}
 
     -- local cjson = require "cjson"
@@ -387,7 +406,7 @@ function delete(self, key)
         return nil, "not initialized"
     end
 
-    key = escape_uri(key)
+    key = self.escape_key_method(key)
 
     local req = {"delete ", key, "\r\n"}
 
@@ -466,7 +485,7 @@ function _incr_decr(self, cmd, key, value)
         return nil, "not initialized"
     end
 
-    local req = {cmd, " ", escape_uri(key), " ", value, "\r\n"}
+    local req = {cmd, " ", self.escape_key_method(key), " ", value, "\r\n"}
 
     local bytes, err = sock:send(req)
     if not bytes then

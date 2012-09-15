@@ -2030,3 +2030,163 @@ failed to cas: EXISTS$
 --- no_error_log
 [error]
 
+
+=== TEST 37: change escape method
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+
+            function identity(str)
+                return str
+            end
+
+            local memcached = require "resty.memcached"
+            local memc = memcached:new{ key_transform = { identity, identity }}
+            local key = "dog&cat"
+
+            memc:set_timeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set(key, 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            for i = 1, 2 do
+                local res, flags, err = memc:get(key)
+                if err then
+                    ngx.say("failed to get", key, ": ", err)
+                    return
+                end
+
+                if not res then
+                    ngx.say(key, " not found")
+                    return
+                end
+
+                ngx.say(key, ": ", res, " (flags: ", flags, ")")
+            end
+
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+dog&cat: 32 (flags: 0)
+dog&cat: 32 (flags: 0)
+--- no_error_log
+[error]
+
+
+=== TEST 38: gets (multiple key) + change only unescape key
+--- http_config eval: $::HttpConfig
+--- config
+    resolver $TEST_NGINX_RESOLVER;
+    location /t {
+        content_by_lua '
+            function identity(str)
+                return str
+            end
+
+            local memcached = require "resty.memcached"
+            local memc = memcached:new{key_transform = {ngx.escape_uri, identity}}
+
+            local key = "dog&cat"
+
+            memc:set_timeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set(key, 32)
+            if not ok then
+                ngx.say("failed to set ", key, ": ", err)
+                return
+            end
+
+            local ok, err = memc:set("cat", "hello\\nworld\\n")
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            local results, err = memc:gets({key, "blah", "cat"})
+            if err then
+                ngx.say("failed to get keys: ", err)
+                return
+            end
+
+            if not results then
+                ngx.say("results empty")
+                return
+            end
+
+            if results[key] then
+                ngx.say(key, ": ", table.concat(results[key], " "))
+            else
+                ngx.say(key, " not found")
+            end
+
+            -- encode key for second run
+            key = ngx.escape_uri(key)
+
+            if results[key] then
+                ngx.say(key, ": ", table.concat(results[key], " "))
+            else
+                ngx.say(key, " not found")
+            end
+
+
+            if results.blah then
+                ngx.say("blah: ", table.concat(results.blah, " "))
+            else
+                ngx.say("blah not found")
+            end
+
+            if results.cat then
+                ngx.say("cat: ", table.concat(results.cat, " "))
+            else
+                ngx.say("cat not found")
+            end
+
+            local ok, err = memc:close()
+            if not ok then
+                ngx.say("failed to close: ", err)
+                return
+            end
+        ';
+    }
+--- request
+GET /t
+--- response_body_like chop
+^dog&cat not found
+dog%26cat: 32 0 \d+
+blah not found
+cat: hello
+world
+ 0 \d+$
+--- no_error_log
+[error]
