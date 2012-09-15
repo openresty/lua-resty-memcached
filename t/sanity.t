@@ -2042,15 +2042,12 @@ failed to cas: EXISTS$
             end
 
             local memcached = require "resty.memcached"
-            local memc = memcached:new()
+            local memc = memcached:new{ key_transform = { identity, identity }}
             local key = "dog&cat"
-
-            memc:set_escape_key_method(identity)
-            memc:set_unescape_key_method(identity)
 
             memc:set_timeout(1000) -- 1 sec
 
-                local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -2106,11 +2103,9 @@ dog&cat: 32 (flags: 0)
             end
 
             local memcached = require "resty.memcached"
-            local memc = memcached:new()
+            local memc = memcached:new{key_transform = {ngx.escape_uri, identity}}
 
             local key = "dog&cat"
-
-            memc:set_unescape_key_method(identity)
 
             memc:set_timeout(1000) -- 1 sec
 

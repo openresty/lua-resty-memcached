@@ -93,9 +93,15 @@ The `key` argument provided in the following methods will be automatically escap
 
 new
 ---
-`syntax: memc, err = memcached:new()`
+`syntax: memc, err = memcached:new(opts)`
 
 Creates a memcached object. In case of failures, returns `nil` and a string describing the error.
+
+It accepts an optional `opts` table argument. The following options are supported:
+
+* `key_transform`
+    a table containing the method to serialize, and un-serialize the key to put in memcache
+    Note : memached:new{ key_transform = { ngx.escape_uri, ngx.unescape_uri }} is the default behavior.
 
 connect
 -------
@@ -134,26 +140,6 @@ set_timeout
 `syntax: memc:set_timeout(time)`
 
 Sets the timeout (in ms) protection for subsequent operations, including the `connect` method.
-
-set_escape_key_method
----------------------
-`syntax: memc:set_escape_key_method(method)`
-
-Specify a function to escape the key beforing inserting it in memc, for example
-
-    memc:set_escape_key_method(ngx.encode_base64)
-
-Note: the default is ngx.escape_uri
-
-set_unescape_key_method
------------------------
-`syntax: memc:set_unescape_key_method(method)`
-
-Specify a function to unescape the key fetched from memc, for example
-
-    memc:set_unescape_key_method(ngx.decode_base64)
-
-Note: the default is ngx.unescape_uri
 
 set_keepalive
 ------------

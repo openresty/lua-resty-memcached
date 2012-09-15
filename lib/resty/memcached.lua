@@ -17,18 +17,35 @@ local class = resty.memcached
 local mt = { __index = class }
 
 
-function new(self)
+function new(self, opts)
     local sock, err = tcp()
     if not sock then
         return nil, err
     end
+
+    local escape_key_method = ngx.escape_uri
+    local unescape_key_method = ngx.unescape_uri
+
+    if opts then
+       local key_transform = opts.key_transform
+
+       if key_transform and type(key_transform) == "table" then
+          escape_key_method = key_transform[1]
+          unescape_key_method = key_transform[2]
+          if not escape_key_method or not unescape_key_method then
+             return nil, "expecting key_transform = { escape, unescape } table"
+          end
+       end
+    end
+
     return setmetatable(
        {
           sock = sock,
-          escape_key_method = ngx.escape_uri,
-          unescape_key_method = ngx.unescape_uri,
+          escape_key_method = escape_key_method,
+          unescape_key_method = unescape_key_method,
        }, mt)
 end
+
 
 function set_timeout(self, timeout)
     local sock = self.sock
@@ -37,16 +54,6 @@ function set_timeout(self, timeout)
     end
 
     return sock:settimeout(timeout)
-end
-
-
-function set_escape_key_method(self, escape_method)
-   self.escape_key_method = escape_method
-end
-
-
-function set_unescape_key_method(self, unescape_method)
-   self.unescape_key_method = unescape_method
 end
 
 
