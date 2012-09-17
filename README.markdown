@@ -93,9 +93,20 @@ The `key` argument provided in the following methods will be automatically escap
 
 new
 ---
-`syntax: memc, err = memcached:new()`
+`syntax: memc, err = memcached:new(opts?)`
 
 Creates a memcached object. In case of failures, returns `nil` and a string describing the error.
+
+It accepts an optional `opts` table argument. The following options are supported:
+
+* `key_transform`
+: an array table containing two functions for escaping and unescaping the
+: memcached keys, respectively. By default,
+: the memcached keys will be escaped and unescaped as URI components, that is
+
+    memached:new{
+        key_transform = { ngx.escape_uri, ngx.unescape_uri }
+    }
 
 connect
 -------
