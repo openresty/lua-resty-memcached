@@ -41,12 +41,11 @@ function new(self, opts)
        end
     end
 
-    return setmetatable(
-       {
-          sock = sock,
-          escape_key = escape_key,
-          unescape_key = unescape_key,
-       }, mt)
+    return setmetatable({
+        sock = sock,
+        escape_key = escape_key,
+        unescape_key = unescape_key,
+    }, mt)
 end
 
 
