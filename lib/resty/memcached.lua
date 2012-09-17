@@ -3,7 +3,7 @@
 module("resty.memcached", package.seeall)
 
 
-_VERSION = '0.07'
+_VERSION = '0.08'
 
 
 local sub = string.sub
