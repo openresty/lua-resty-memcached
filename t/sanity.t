@@ -1360,7 +1360,7 @@ GET /t
 --- request
 GET /t
 --- response_body_like chop
-^failed to get version: (closed|timeout|broken pipe)$
+^failed to get version: (closed|timeout|broken pipe|connection reset by peer)$
 
 
 
