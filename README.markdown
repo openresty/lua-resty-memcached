@@ -134,8 +134,6 @@ is functionally equivalent to
 
     memc:set("dog", "a kind of animal")
 
-but the former form can eliminate string concatenation operations on the Lua land and could be a little faster.
-
 The `exptime` parameter is optional, defaults to `0`.
 
 The `flags` parameter is optional, defaults to `0`.
@@ -191,8 +189,6 @@ is functionally equivalent to
 
     memc:add("dog", "a kind of animal")
 
-but the former form can eliminate string concatenation operations on the Lua land and could be a little faster.
-
 The `exptime` parameter is optional, defaults to `0`.
 
 The `flags` parameter is optional, defaults to `0`.
@@ -214,8 +210,6 @@ strings that are supposed to be concatenated as a whole
 is functionally equivalent to
 
     memc:replace("dog", "a kind of animal")
-
-but the former form can eliminate string concatenation operations on the Lua land and could be a little faster.
 
 The `exptime` parameter is optional, defaults to `0`.
 
@@ -239,8 +233,6 @@ is functionally equivalent to
 
     memc:append("dog", "a kind of animal")
 
-but the former form can eliminate string concatenation operations on the Lua land and could be a little faster.
-
 The `exptime` parameter is optional, defaults to `0`.
 
 The `flags` parameter is optional, defaults to `0`.
@@ -262,8 +254,6 @@ strings that are supposed to be concatenated as a whole
 is functionally equivalent to
 
     memc:prepend("dog", "a kind of animal")
-
-but the former form can eliminate string concatenation operations on the Lua land and could be a little faster.
 
 The `exptime` parameter is optional, defaults to `0`.
 

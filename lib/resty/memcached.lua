@@ -13,6 +13,7 @@ local match = string.match
 local tcp = ngx.socket.tcp
 local strlen = string.len
 local insert = table.insert
+local concat = table.concat
 
 
 local class = resty.memcached
@@ -80,7 +81,7 @@ function get(self, key)
     end
 
     local cmd = {"get ", self.escape_key(key), "\r\n"}
-    local bytes, err = sock:send(cmd)
+    local bytes, err = sock:send(concat(cmd))
     if not bytes then
         return nil, nil, "failed to send command: " .. (err or "")
     end
@@ -126,22 +127,24 @@ function _multi_get(self, keys)
         return nil, "not initialized"
     end
 
-    if #keys == 0 then
+    local nkeys = #keys
+
+    if nkeys == 0 then
         return {}, nil
     end
 
     local escape_key = self.escape_key
     local cmd = {"get"}
 
-    for i, key in ipairs(keys) do
+    for i = 1, nkeys do
         insert(cmd, " ")
-        insert(cmd, escape_key(key))
+        insert(cmd, escape_key(keys[i]))
     end
     insert(cmd, "\r\n")
 
     -- print("multi get cmd: ", cmd)
 
-    local bytes, err = sock:send(cmd)
+    local bytes, err = sock:send(concat(cmd))
     if not bytes then
         return nil, err
     end
@@ -193,7 +196,7 @@ function gets(self, key)
     end
 
     local cmd = {"gets ", self.escape_key(key), "\r\n"}
-    local bytes, err = sock:send(cmd)
+    local bytes, err = sock:send(concat(cmd))
     if not bytes then
         return nil, nil, err
     end
@@ -239,22 +242,24 @@ function _multi_gets(self, keys)
         return nil, "not initialized"
     end
 
-    if #keys == 0 then
+    local nkeys = #keys
+
+    if nkeys == 0 then
         return {}, nil
     end
 
     local escape_key = self.escape_key
     local cmd = {"gets"}
 
-    for i, key in ipairs(keys) do
+    for i = 1, nkeys do
         insert(cmd, " ")
-        insert(cmd, escape_key(key))
+        insert(cmd, escape_key(keys[i]))
     end
     insert(cmd, "\r\n")
 
     -- print("multi get cmd: ", cmd)
 
-    local bytes, err = sock:send(cmd)
+    local bytes, err = sock:send(concat(cmd))
     if not bytes then
         return nil, err
     end
@@ -322,16 +327,18 @@ function prepend(self, ...)
 end
 
 
-function _value_len(value)
-    if type(value) == "table" then
-        local len = 0
-        for _, v in ipairs(value) do
-            len = len + _value_len(v)
+local function _expand_table(value)
+    local segs = {}
+    local nelems = #value
+    for i = 1, nelems do
+        local seg = value[i]
+        if type(seg) == "table" then
+            insert(segs, _expand_table(seg))
+        else
+            insert(segs, seg)
         end
-        return len
     end
-
-    return strlen(value)
+    return concat(segs)
 end
 
 
@@ -349,10 +356,14 @@ function _store(self, cmd, key, value, exptime, flags)
         return nil, "not initialized"
     end
 
-    local req = {cmd, " ", self.escape_key(key), " ", flags, " ", exptime, " ",
-                 _value_len(value), "\r\n", value, "\r\n"}
+    if type(value) == "table" then
+        value = _expand_table(value)
+    end
 
-    local bytes, err = sock:send(req)
+    local req = {cmd, " ", self.escape_key(key), " ", flags, " ", exptime, " ",
+                 strlen(value), "\r\n", value, "\r\n"}
+
+    local bytes, err = sock:send(concat(req))
     if not bytes then
         return nil, err
     end
@@ -385,12 +396,12 @@ function cas(self, key, value, cas_uniq, exptime, flags)
     end
 
     local req = {"cas ", self.escape_key(key), " ", flags, " ", exptime, " ",
-                 string.len(value), " ", cas_uniq, "\r\n", value, "\r\n"}
+                 strlen(value), " ", cas_uniq, "\r\n", value, "\r\n"}
 
     -- local cjson = require "cjson"
     -- print("request: ", cjson.encode(req))
 
-    local bytes, err = sock:send(req)
+    local bytes, err = sock:send(concat(req))
     if not bytes then
         return nil, err
     end
@@ -420,7 +431,7 @@ function delete(self, key)
 
     local req = {"delete ", key, "\r\n"}
 
-    local bytes, err = sock:send(req)
+    local bytes, err = sock:send(concat(req))
     if not bytes then
         return nil, err
     end
@@ -466,7 +477,7 @@ function flush_all(self, time)
 
     local req
     if time then
-        req = {"flush_all ", time, "\r\n"}
+        req = concat({"flush_all ", time, "\r\n"})
     else
         req = "flush_all\r\n"
     end
@@ -497,7 +508,7 @@ function _incr_decr(self, cmd, key, value)
 
     local req = {cmd, " ", self.escape_key(key), " ", value, "\r\n"}
 
-    local bytes, err = sock:send(req)
+    local bytes, err = sock:send(concat(req))
     if not bytes then
         return nil, err
     end
@@ -533,7 +544,7 @@ function stats(self, args)
 
     local req
     if args then
-        req = {"stats ", args, "\r\n"}
+        req = concat({"stats ", args, "\r\n"})
     else
         req = "stats\r\n"
     end
@@ -612,7 +623,7 @@ function verbosity(self, level)
         return nil, "not initialized"
     end
 
-    local bytes, err = sock:send({"verbosity ", level, "\r\n"})
+    local bytes, err = sock:send(concat({"verbosity ", level, "\r\n"}))
     if not bytes then
         return nil, err
     end
