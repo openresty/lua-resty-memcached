@@ -1,9 +1,4 @@
--- Copyright (C) 2012 Zhang "agentzh" Yichun (章亦春)
-
-module("resty.memcached", package.seeall)
-
-
-_VERSION = '0.09'
+-- Copyright (C) 2012 Yichun Zhang (agentzh)
 
 
 local sub = string.sub
@@ -14,11 +9,16 @@ local tcp = ngx.socket.tcp
 local strlen = string.len
 local insert = table.insert
 local concat = table.concat
+local setmetatable = setmetatable
+local type = type
+local error = error
 
 
-local class = resty.memcached
+module(...)
 
-local mt = { __index = class }
+_VERSION = '0.09'
+
+local mt = { __index = _M }
 
 
 function new(self, opts)
@@ -651,8 +651,12 @@ function close(self)
 end
 
 
--- to prevent use of casual module global variables
-getmetatable(class).__newindex = function (table, key, val)
-    error('attempt to write to undeclared variable "' .. key .. '"')
-end
+local class_mt = {
+    -- to prevent use of casual module global variables
+    __newindex = function (table, key, val)
+        error('attempt to write to undeclared variable "' .. key .. '"')
+    end
+}
+
+setmetatable(_M, class_mt)
 
