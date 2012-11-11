@@ -16,7 +16,7 @@ local error = error
 
 module(...)
 
-_VERSION = '0.09'
+_VERSION = '0.10'
 
 local mt = { __index = _M }
 
