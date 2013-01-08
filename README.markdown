@@ -301,6 +301,13 @@ Just like the `set` method but does a check and set operation, which means "stor
 
 The `cas_unique` argument can be obtained from the `gets` method.
 
+touch
+---
+`syntax: ok, err = memc:touch(key, exptime)`
+
+Update the expiration time of an existing key.
+
+
 flush_all
 ---------
 `syntax: ok, err = memc:flush_all(time?)`
