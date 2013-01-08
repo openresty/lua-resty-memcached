@@ -641,6 +641,25 @@ function verbosity(self, level)
 end
 
 
+function touch(self, key, exptime)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local bytes, err = sock:send(concat({"touch ", self.escape_key(key), " ", exptime, "\r\n"}))
+    if not bytes then
+        return nil, err
+    end
+
+    local line, err = sock:receive()
+    if not line or line ~= "STORED" then
+        return nil, err
+    end
+    return 1
+end
+
+
 function close(self)
     local sock = self.sock
     if not sock then
