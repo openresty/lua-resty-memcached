@@ -653,10 +653,14 @@ function touch(self, key, exptime)
     end
 
     local line, err = sock:receive()
-    if not line or line ~= "STORED" then
+    if not line  then
         return nil, err
     end
-    return 1
+	-- moxi server from couchbase returned stored after touching
+	if line == "TOUCHED" or line =="STORED" then
+	    return 1
+	end
+	return nil, line
 end
 
 
