@@ -309,7 +309,7 @@ Update the expiration time of an existing key.
 
 Returns `1` for success or `nil` with a string describing the error otherwise.
 
-This method was first introduced in the `v0.10` release.
+This method was first introduced in the `v0.11` release.
 
 flush_all
 ---------
