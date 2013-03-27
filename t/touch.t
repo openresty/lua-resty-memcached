@@ -50,8 +50,6 @@ __DATA__
                 return
             end
 
-            ngx.sleep(0.1)
-
             local ok, err = memc:touch(key, 120) -- 120sec
             if not ok then
                 ngx.say("failed to touch ", key, ": ", err)
@@ -60,7 +58,7 @@ __DATA__
 
             ngx.say("touch: ", ok)
 
-            ngx.sleep(1)
+            ngx.sleep(1.1)
 
             local val, err = memc:get(key)
             if not val then
