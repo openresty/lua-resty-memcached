@@ -74,7 +74,11 @@ Synopsis
 
                 -- put it into the connection pool of size 100,
                 -- with 0 idle timeout
-                memc:set_keepalive(0, 100)
+                local ok, err = memc:set_keepalive(0, 100)
+                if not ok then
+                    ngx.say("cannot set keepalive: ", err)
+                    return
+                end
 
                 -- or just close the connection right away:
                 -- local ok, err = memc:close()
