@@ -7,7 +7,6 @@ local unescape_uri = ngx.unescape_uri
 local match = string.match
 local tcp = ngx.socket.tcp
 local strlen = string.len
-local insert = table.insert
 local concat = table.concat
 local setmetatable = setmetatable
 local type = type
@@ -85,12 +84,14 @@ local function _multi_get(self, keys)
 
     local escape_key = self.escape_key
     local cmd = {"get"}
+    local n = 1
 
     for i = 1, nkeys do
-        insert(cmd, " ")
-        insert(cmd, escape_key(keys[i]))
+        cmd[n + 1] = " "
+        cmd[n + 2] = escape_key(keys[i])
+        n = n + 2
     end
-    insert(cmd, "\r\n")
+    cmd[n + 1] = "\r\n"
 
     -- print("multi get cmd: ", cmd)
 
@@ -200,12 +201,13 @@ local function _multi_gets(self, keys)
 
     local escape_key = self.escape_key
     local cmd = {"gets"}
-
+    local n = 1
     for i = 1, nkeys do
-        insert(cmd, " ")
-        insert(cmd, escape_key(keys[i]))
+        cmd[n + 1] = " "
+        cmd[n + 2] = escape_key(keys[i])
+        n = n + 2
     end
-    insert(cmd, "\r\n")
+    cmd[n + 1] = "\r\n"
 
     -- print("multi get cmd: ", cmd)
 
@@ -306,12 +308,14 @@ end
 local function _expand_table(value)
     local segs = {}
     local nelems = #value
+    local nsegs = 0
     for i = 1, nelems do
         local seg = value[i]
+        nsegs = nsegs + 1
         if type(seg) == "table" then
-            insert(segs, _expand_table(seg))
+            segs[nsegs] = _expand_table(seg)
         else
-            insert(segs, seg)
+            segs[nsegs] = seg
         end
     end
     return concat(segs)
@@ -556,6 +560,7 @@ function _M.stats(self, args)
     end
 
     local lines = {}
+    local n = 0
     while true do
         local line, err = sock:receive()
         if not line then
@@ -567,7 +572,8 @@ function _M.stats(self, args)
         end
 
         if not match(line, "ERROR") then
-            insert(lines, line)
+            n = n + 1
+            lines[n] = line
         else
             return nil, line
         end
