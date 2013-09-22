@@ -73,8 +73,8 @@ Synopsis
                 ngx.say("dog: ", res)
 
                 -- put it into the connection pool of size 100,
-                -- with 0 idle timeout
-                local ok, err = memc:set_keepalive(0, 100)
+                -- with 10 seconds max idle timeout
+                local ok, err = memc:set_keepalive(10000, 100)
                 if not ok then
                     ngx.say("cannot set keepalive: ", err)
                     return
