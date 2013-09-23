@@ -146,8 +146,7 @@ function _M.get(self, key)
         return nil, nil, "not initialized"
     end
 
-    local cmd = {"get ", self.escape_key(key), "\r\n"}
-    local bytes, err = sock:send(concat(cmd))
+    local bytes, err = sock:send("get " .. self.escape_key(key) .. "\r\n")
     if not bytes then
         return nil, nil, "failed to send command: " .. (err or "")
     end
@@ -264,8 +263,7 @@ function _M.gets(self, key)
         return nil, nil, nil, "not initialized"
     end
 
-    local cmd = {"gets ", self.escape_key(key), "\r\n"}
-    local bytes, err = sock:send(concat(cmd))
+    local bytes, err = sock:send("gets " .. self.escape_key(key) .. "\r\n")
     if not bytes then
         return nil, nil, err
     end
@@ -340,10 +338,10 @@ local function _store(self, cmd, key, value, exptime, flags)
         value = _expand_table(value)
     end
 
-    local req = {cmd, " ", self.escape_key(key), " ", flags, " ", exptime, " ",
-                 strlen(value), "\r\n", value, "\r\n"}
-
-    local bytes, err = sock:send(concat(req))
+    local req = cmd .. " " .. self.escape_key(key) .. " " .. flags .. " "
+                .. exptime .. " " .. strlen(value) .. "\r\n" .. value
+                .. "\r\n"
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -400,13 +398,14 @@ function _M.cas(self, key, value, cas_uniq, exptime, flags)
         return nil, "not initialized"
     end
 
-    local req = {"cas ", self.escape_key(key), " ", flags, " ", exptime, " ",
-                 strlen(value), " ", cas_uniq, "\r\n", value, "\r\n"}
+    local req = "cas " .. self.escape_key(key) .. " " .. flags .. " "
+                .. exptime .. " " .. strlen(value) .. " " .. cas_uniq
+                .. "\r\n" .. value .. "\r\n"
 
     -- local cjson = require "cjson"
     -- print("request: ", cjson.encode(req))
 
-    local bytes, err = sock:send(concat(req))
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -434,9 +433,9 @@ function _M.delete(self, key)
 
     key = self.escape_key(key)
 
-    local req = {"delete ", key, "\r\n"}
+    local req = "delete " .. key .. "\r\n"
 
-    local bytes, err = sock:send(concat(req))
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -482,7 +481,7 @@ function _M.flush_all(self, time)
 
     local req
     if time then
-        req = concat({"flush_all ", time, "\r\n"})
+        req = "flush_all " .. time .. "\r\n"
     else
         req = "flush_all\r\n"
     end
@@ -511,9 +510,9 @@ local function _incr_decr(self, cmd, key, value)
         return nil, "not initialized"
     end
 
-    local req = {cmd, " ", self.escape_key(key), " ", value, "\r\n"}
+    local req = cmd .. " " .. self.escape_key(key) .. " " .. value .. "\r\n"
 
-    local bytes, err = sock:send(concat(req))
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
@@ -549,7 +548,7 @@ function _M.stats(self, args)
 
     local req
     if args then
-        req = concat({"stats ", args, "\r\n"})
+        req = "stats " .. args .. "\r\n"
     else
         req = "stats\r\n"
     end
@@ -630,7 +629,7 @@ function _M.verbosity(self, level)
         return nil, "not initialized"
     end
 
-    local bytes, err = sock:send(concat({"verbosity ", level, "\r\n"}))
+    local bytes, err = sock:send("verbosity " .. level .. "\r\n")
     if not bytes then
         return nil, err
     end
@@ -654,8 +653,8 @@ function _M.touch(self, key, exptime)
         return nil, "not initialized"
     end
 
-    local bytes, err = sock:send(concat{"touch ", self.escape_key(key), " ",
-                                        exptime, "\r\n"})
+    local bytes, err = sock:send("touch " .. self.escape_key(key) .. " "
+                                 .. exptime .. "\r\n")
     if not bytes then
         return nil, err
     end
