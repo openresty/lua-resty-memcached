@@ -14,7 +14,7 @@ local error = error
 
 
 local _M = {
-    _VERSION = '0.11'
+    _VERSION = '0.12'
 }
 
 
