@@ -386,6 +386,15 @@ Sets the verbosity level used by the memcached server. The `level` argument shou
 
 Returns `1` in case of success and `nil` other wise. In case of failures, another string value will also be returned to describe the error.
 
+Automatic Error Logging
+=======================
+
+By default the underlying [ngx_lua](http://wiki.nginx.org/HttpLuaModule) module
+does error logging when socket errors happen. If you are already doing proper error
+handling in your own Lua code, then you are recommended to disable this automatic error logging by turning off [ngx_lua](http://wiki.nginx.org/HttpLuaModule)'s [lua_socket_log_errors](http://wiki.nginx.org/HttpLuaModule#lua_socket_log_errors) directive, that is,
+
+    lua_socket_log_errors off;
+
 Limitations
 ===========
 
