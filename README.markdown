@@ -23,6 +23,7 @@ Note that at least [ngx_lua 0.5.0rc29](https://github.com/chaoslawful/lua-nginx-
 Synopsis
 ========
 
+```lua
     lua_package_path "/path/to/lua-resty-memcached/lib/?.lua;;";
 
     server {
@@ -89,6 +90,7 @@ Synopsis
             ';
         }
     }
+```
 
 Methods
 =======
@@ -104,13 +106,15 @@ Creates a memcached object. In case of failures, returns `nil` and a string desc
 It accepts an optional `opts` table argument. The following options are supported:
 
 * `key_transform`
-: an array table containing two functions for escaping and unescaping the
-: memcached keys, respectively. By default,
-: the memcached keys will be escaped and unescaped as URI components, that is
+    an array table containing two functions for escaping and unescaping the
+    memcached keys, respectively. By default,
+    the memcached keys will be escaped and unescaped as URI components, that is
 
+```lua
     memached:new{
         key_transform = { ngx.escape_uri, ngx.unescape_uri }
     }
+```
 
 connect
 -------
@@ -132,11 +136,15 @@ The `value` argument could also be a Lua table holding multiple Lua
 strings that are supposed to be concatenated as a whole
 (without any delimiters). For example,
 
+```lua
     memc:set("dog", {"a ", {"kind of"}, " animal"})
+```
 
 is functionally equivalent to
 
+```lua
     memc:set("dog", "a kind of animal")
+```
 
 The `exptime` parameter is optional, defaults to `0`.
 
@@ -187,11 +195,15 @@ The `value` argument could also be a Lua table holding multiple Lua
 strings that are supposed to be concatenated as a whole
 (without any delimiters). For example,
 
+```lua
     memc:add("dog", {"a ", {"kind of"}, " animal"})
+```
 
 is functionally equivalent to
 
+```lua
     memc:add("dog", "a kind of animal")
+```
 
 The `exptime` parameter is optional, defaults to `0`.
 
@@ -209,11 +221,15 @@ The `value` argument could also be a Lua table holding multiple Lua
 strings that are supposed to be concatenated as a whole
 (without any delimiters). For example,
 
+```lua
     memc:replace("dog", {"a ", {"kind of"}, " animal"})
+```
 
 is functionally equivalent to
 
+```lua
     memc:replace("dog", "a kind of animal")
+```
 
 The `exptime` parameter is optional, defaults to `0`.
 
@@ -231,11 +247,15 @@ The `value` argument could also be a Lua table holding multiple Lua
 strings that are supposed to be concatenated as a whole
 (without any delimiters). For example,
 
+```lua
     memc:append("dog", {"a ", {"kind of"}, " animal"})
+```
 
 is functionally equivalent to
 
+```lua
     memc:append("dog", "a kind of animal")
+```
 
 The `exptime` parameter is optional, defaults to `0`.
 
@@ -253,11 +273,15 @@ The `value` argument could also be a Lua table holding multiple Lua
 strings that are supposed to be concatenated as a whole
 (without any delimiters). For example,
 
+```lua
     memc:prepend("dog", {"a ", {"kind of"}, " animal"})
+```
 
 is functionally equivalent to
 
+```lua
     memc:prepend("dog", "a kind of animal")
+```
 
 The `exptime` parameter is optional, defaults to `0`.
 
@@ -393,7 +417,9 @@ By default the underlying [ngx_lua](http://wiki.nginx.org/HttpLuaModule) module
 does error logging when socket errors happen. If you are already doing proper error
 handling in your own Lua code, then you are recommended to disable this automatic error logging by turning off [ngx_lua](http://wiki.nginx.org/HttpLuaModule)'s [lua_socket_log_errors](http://wiki.nginx.org/HttpLuaModule#lua_socket_log_errors) directive, that is,
 
+```nginx
     lua_socket_log_errors off;
+```
 
 Limitations
 ===========
