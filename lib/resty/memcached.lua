@@ -106,6 +106,9 @@ local function _multi_get(self, keys)
     while true do
         local line, err = sock:receive()
         if not line then
+            if err == "timeout" then
+                sock:close()
+            end
             return nil, err
         end
 
@@ -120,6 +123,9 @@ local function _multi_get(self, keys)
 
             local data, err = sock:receive(len)
             if not data then
+                if err == "timeout" then
+                    sock:close()
+                end
                 return nil, err
             end
 
@@ -127,6 +133,9 @@ local function _multi_get(self, keys)
 
             data, err = sock:receive(2) -- discard the trailing CRLF
             if not data then
+                if err == "timeout" then
+                    sock:close()
+                end
                 return nil, err
             end
         end
@@ -153,6 +162,9 @@ function _M.get(self, key)
 
     local line, err = sock:receive()
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, nil, "failed to receive 1st line: " .. (err or "")
     end
 
@@ -169,16 +181,25 @@ function _M.get(self, key)
 
     local data, err = sock:receive(len)
     if not data then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, nil, "failed to receive data chunk: " .. (err or "")
     end
 
     line, err = sock:receive(2) -- discard the trailing CRLF
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, nil, "failed to receive CRLF: " .. (err or "")
     end
 
     line, err = sock:receive() -- discard "END\r\n"
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, nil, "failed to receive END CRLF: " .. (err or "")
     end
 
@@ -221,6 +242,9 @@ local function _multi_gets(self, keys)
     while true do
         local line, err = sock:receive()
         if not line then
+            if err == "timeout" then
+                sock:close()
+            end
             return nil, err
         end
 
@@ -237,6 +261,9 @@ local function _multi_gets(self, keys)
 
             local data, err = sock:receive(len)
             if not data then
+                if err == "timeout" then
+                    sock:close()
+                end
                 return nil, err
             end
 
@@ -244,6 +271,9 @@ local function _multi_gets(self, keys)
 
             data, err = sock:receive(2) -- discard the trailing CRLF
             if not data then
+                if err == "timeout" then
+                    sock:close()
+                end
                 return nil, err
             end
         end
@@ -270,6 +300,9 @@ function _M.gets(self, key)
 
     local line, err = sock:receive()
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, nil, nil, err
     end
 
@@ -286,16 +319,25 @@ function _M.gets(self, key)
 
     local data, err = sock:receive(len)
     if not data then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, nil, nil, err
     end
 
     line, err = sock:receive(2) -- discard the trailing CRLF
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, nil, nil, err
     end
 
     line, err = sock:receive() -- discard "END\r\n"
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, nil, nil, err
     end
 
@@ -348,6 +390,9 @@ local function _store(self, cmd, key, value, exptime, flags)
 
     local data, err = sock:receive()
     if not data then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, err
     end
 
@@ -412,6 +457,9 @@ function _M.cas(self, key, value, cas_uniq, exptime, flags)
 
     local line, err = sock:receive()
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, err
     end
 
@@ -442,6 +490,9 @@ function _M.delete(self, key)
 
     local res, err = sock:receive()
     if not res then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, err
     end
 
@@ -493,6 +544,9 @@ function _M.flush_all(self, time)
 
     local res, err = sock:receive()
     if not res then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, err
     end
 
@@ -519,6 +573,9 @@ local function _incr_decr(self, cmd, key, value)
 
     local line, err = sock:receive()
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, err
     end
 
@@ -563,6 +620,9 @@ function _M.stats(self, args)
     while true do
         local line, err = sock:receive()
         if not line then
+            if err == "timeout" then
+                sock:close()
+            end
             return nil, err
         end
 
@@ -596,6 +656,9 @@ function _M.version(self)
 
     local line, err = sock:receive()
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, err
     end
 
@@ -636,6 +699,9 @@ function _M.verbosity(self, level)
 
     local line, err = sock:receive()
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, err
     end
 
@@ -661,6 +727,9 @@ function _M.touch(self, key, exptime)
 
     local line, err = sock:receive()
     if not line then
+        if err == "timeout" then
+            sock:close()
+        end
         return nil, err
     end
 
