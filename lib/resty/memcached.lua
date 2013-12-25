@@ -187,20 +187,12 @@ function _M.get(self, key)
         return nil, nil, "failed to receive data chunk: " .. (err or "")
     end
 
-    line, err = sock:receive(2) -- discard the trailing CRLF
+    line, err = sock:receive(7) -- discard the trailing "\r\nEND\r\n"
     if not line then
         if err == "timeout" then
             sock:close()
         end
-        return nil, nil, "failed to receive CRLF: " .. (err or "")
-    end
-
-    line, err = sock:receive() -- discard "END\r\n"
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, nil, "failed to receive END CRLF: " .. (err or "")
+        return nil, nil, "failed to receive value trailer: " .. (err or "")
     end
 
     return data, flags
@@ -325,15 +317,7 @@ function _M.gets(self, key)
         return nil, nil, nil, err
     end
 
-    line, err = sock:receive(2) -- discard the trailing CRLF
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, nil, nil, err
-    end
-
-    line, err = sock:receive() -- discard "END\r\n"
+    line, err = sock:receive(7) -- discard the trailing "\r\nEND\r\n"
     if not line then
         if err == "timeout" then
             sock:close()
