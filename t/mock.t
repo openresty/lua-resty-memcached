@@ -72,13 +72,13 @@ failed to flush all: SOME ERROR
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(100) -- 0.1 sec
-
             local ok, err = memc:connect("127.0.0.1", 1921);
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
             end
+
+            memc:set_timeout(100) -- 0.1 sec
 
             for i = 1, 2 do
                 local data, flags, err = memc:get("foo")
