@@ -56,7 +56,8 @@ function _M.set_timeout(self, timeout)
         return nil, "not initialized"
     end
 
-    return sock:settimeout(timeout)
+    sock:settimeout(timeout)
+    return 1
 end
 
 

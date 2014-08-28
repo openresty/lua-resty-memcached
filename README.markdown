@@ -201,9 +201,11 @@ The `flags` parameter is optional, defaults to `0`.
 
 set_timeout
 ----------
-`syntax: memc:set_timeout(time)`
+`syntax: ok, err = memc:set_timeout(time)`
 
 Sets the timeout (in ms) protection for subsequent operations, including the `connect` method.
+
+Returns 1 when successful and nil plus a string describing the error otherwise.
 
 [Back to TOC](#table-of-contents)
 
