@@ -96,7 +96,7 @@ local function _multi_get(self, keys)
 
     -- print("multi get cmd: ", cmd)
 
-    local bytes, err = sock:send(concat(cmd))
+    local bytes, err = sock:send(cmd)
     if not bytes then
         return nil, err
     end
@@ -225,7 +225,7 @@ local function _multi_gets(self, keys)
 
     -- print("multi get cmd: ", cmd)
 
-    local bytes, err = sock:send(concat(cmd))
+    local bytes, err = sock:send(cmd)
     if not bytes then
         return nil, err
     end
