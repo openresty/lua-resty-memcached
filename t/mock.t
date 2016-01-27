@@ -5,7 +5,7 @@ use Cwd qw(cwd);
 
 repeat_each(2);
 
-plan tests => repeat_each() * (4 * blocks() + 3);
+plan tests => repeat_each() * (4 * blocks() + 4);
 
 my $pwd = cwd();
 
@@ -110,7 +110,7 @@ lua tcp socket read timed out
 
 
 
-=== TEST 3: gets getting error responses
+=== TEST 3: gets multi getting error responses
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -147,5 +147,47 @@ GET /t
 "SERVER_ERROR\r\n"
 --- response_body
 failed to gets: SERVER_ERROR
+--- no_error_log
+[error]
+
+
+
+=== TEST 4: get multi getting error responses
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:set_timeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", 1921);
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local res, err = memc:get({"dog", "cat"})
+            if not res then
+                ngx.say("failed to get: ", err)
+                return
+            end
+
+            ngx.say("get: ", table.concat(res, ", "));
+
+            memc:close()
+        ';
+    }
+--- request
+GET /t
+--- tcp_listen: 1921
+--- tcp_query_len: 13
+--- tcp_query eval
+"get dog cat\r\n"
+--- tcp_reply eval
+"SERVER_ERROR\r\n"
+--- response_body
+failed to get: SERVER_ERROR
 --- no_error_log
 [error]
