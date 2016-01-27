@@ -1,4 +1,4 @@
--- Copyright (C) 2012-2013 Yichun Zhang (agentzh), CloudFlare Inc.
+-- Copyright (C) Yichun Zhang (agentzh), CloudFlare Inc.
 
 
 local sub = string.sub
@@ -158,7 +158,7 @@ function _M.get(self, key)
 
     local bytes, err = sock:send("get " .. self.escape_key(key) .. "\r\n")
     if not bytes then
-        return nil, nil, "failed to send command: " .. (err or "")
+        return nil, nil, err
     end
 
     local line, err = sock:receive()
@@ -166,7 +166,7 @@ function _M.get(self, key)
         if err == "timeout" then
             sock:close()
         end
-        return nil, nil, "failed to receive 1st line: " .. (err or "")
+        return nil, nil, err
     end
 
     if line == 'END' then
@@ -175,7 +175,7 @@ function _M.get(self, key)
 
     local flags, len = match(line, '^VALUE %S+ (%d+) (%d+)$')
     if not flags then
-        return nil, nil, "bad line: " .. line
+        return nil, nil, line
     end
 
     -- print("len: ", len, ", flags: ", flags)
@@ -185,7 +185,7 @@ function _M.get(self, key)
         if err == "timeout" then
             sock:close()
         end
-        return nil, nil, "failed to receive data chunk: " .. (err or "")
+        return nil, nil, err
     end
 
     line, err = sock:receive(7) -- discard the trailing "\r\nEND\r\n"
@@ -193,7 +193,7 @@ function _M.get(self, key)
         if err == "timeout" then
             sock:close()
         end
-        return nil, nil, "failed to receive value trailer: " .. (err or "")
+        return nil, nil, err
     end
 
     return data, flags
