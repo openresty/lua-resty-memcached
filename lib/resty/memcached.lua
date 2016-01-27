@@ -250,25 +250,26 @@ local function _multi_gets(self, keys)
 
         -- print("key: ", key, "len: ", len, ", flags: ", flags)
 
-        if key then
+        if not key then
+            return nil, line
+        end
 
-            local data, err = sock:receive(len)
-            if not data then
-                if err == "timeout" then
-                    sock:close()
-                end
-                return nil, err
+        local data, err = sock:receive(len)
+        if not data then
+            if err == "timeout" then
+                sock:close()
             end
+            return nil, err
+        end
 
-            results[unescape_key(key)] = {data, flags, cas_uniq}
+        results[unescape_key(key)] = {data, flags, cas_uniq}
 
-            data, err = sock:receive(2) -- discard the trailing CRLF
-            if not data then
-                if err == "timeout" then
-                    sock:close()
-                end
-                return nil, err
+        data, err = sock:receive(2) -- discard the trailing CRLF
+        if not data then
+            if err == "timeout" then
+                sock:close()
             end
+            return nil, err
         end
     end
 
