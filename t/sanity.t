@@ -1314,7 +1314,7 @@ GET /t
 --- request
 GET /t
 --- response_body_like chop
-^version: \d+(?:\.\d+)*$
+^version: \d+(?:\.\d+)+
 --- no_error_log
 [error]
 
