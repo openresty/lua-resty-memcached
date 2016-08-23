@@ -361,7 +361,7 @@ get
 `syntax: value, flags, err = memc:get(key)`
 `syntax: results, err = memc:get(keys)`
 
-Get a single entry or multiple entries in the memcached server via a single key or a talbe of keys.
+Get a single entry or multiple entries in the memcached server via a single key or a table of keys.
 
 Let us first discuss the case When the key is a single string.
 
