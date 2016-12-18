@@ -517,8 +517,8 @@ handling in your own Lua code, then you are recommended to disable this automati
 Limitations
 ===========
 
-* This library cannot be used in code contexts like set_by_lua*, log_by_lua*, and
-header_filter_by_lua* where the ngx_lua cosocket API is not available.
+* This library cannot be used in code contexts like `set_by_lua*`, `log_by_lua*`, and
+`header_filter_by_lua*` where the ngx\_lua cosocket API is not available.
 * The `resty.memcached` object instance cannot be stored in a Lua variable at the Lua module level,
 because it will then be shared by all the concurrent requests handled by the same nginx
  worker process (see
@@ -541,7 +541,7 @@ TODO
 Author
 ======
 
-Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, CloudFlare Inc.
+Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, OpenResty Inc.
 
 [Back to TOC](#table-of-contents)
 
@@ -550,7 +550,7 @@ Copyright and License
 
 This module is licensed under the BSD license.
 
-Copyright (C) 2012-2016, by Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, CloudFlare Inc.
+Copyright (C) 2012-2016, by Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, OpenResty Inc.
 
 All rights reserved.
 
