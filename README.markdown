@@ -193,9 +193,9 @@ is functionally equivalent to
     memc:set("dog", "a kind of animal")
 ```
 
-The `exptime` parameter is optional, defaults to `0`.
+The `exptime` parameter is optional and defaults to `0` (meaning never expires). The expiration time is in seconds.
 
-The `flags` parameter is optional, defaults to `0`.
+The `flags` parameter is optional and defaults to `0`.
 
 [Back to TOC](#table-of-contents)
 
@@ -264,7 +264,7 @@ is functionally equivalent to
     memc:add("dog", "a kind of animal")
 ```
 
-The `exptime` parameter is optional, defaults to `0`.
+The `exptime` parameter is optional and defaults to `0` (meaning never expires). The expiration time is in seconds.
 
 The `flags` parameter is optional, defaults to `0`.
 
@@ -292,7 +292,7 @@ is functionally equivalent to
     memc:replace("dog", "a kind of animal")
 ```
 
-The `exptime` parameter is optional, defaults to `0`.
+The `exptime` parameter is optional and defaults to `0` (meaning never expires). The expiration time is in seconds.
 
 The `flags` parameter is optional, defaults to `0`.
 
@@ -320,7 +320,7 @@ is functionally equivalent to
     memc:append("dog", "a kind of animal")
 ```
 
-The `exptime` parameter is optional, defaults to `0`.
+The `exptime` parameter is optional and defaults to `0` (meaning never expires). The expiration time is in seconds.
 
 The `flags` parameter is optional, defaults to `0`.
 
@@ -348,9 +348,9 @@ is functionally equivalent to
     memc:prepend("dog", "a kind of animal")
 ```
 
-The `exptime` parameter is optional, defaults to `0`.
+The `exptime` parameter is optional and defaults to `0` (meaning never expires). The expiration time is in seconds.
 
-The `flags` parameter is optional, defaults to `0`.
+The `flags` parameter is optional and defaults to `0`.
 
 In case of success, returns `1`. In case of errors, returns `nil` with a string describing the error.
 
