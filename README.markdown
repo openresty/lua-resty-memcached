@@ -34,6 +34,7 @@ Table of Contents
     * [version](#version)
     * [quit](#quit)
     * [verbosity](#verbosity)
+* [Cluster Support](#cluster-support)
 * [Automatic Error Logging](#automatic-error-logging)
 * [Limitations](#limitations)
 * [TODO](#todo)
@@ -359,6 +360,7 @@ In case of success, returns `1`. In case of errors, returns `nil` with a string 
 get
 ---
 `syntax: value, flags, err = memc:get(key)`
+
 `syntax: results, err = memc:get(keys)`
 
 Get a single entry or multiple entries in the memcached server via a single key or a table of keys.
@@ -500,6 +502,108 @@ Sets the verbosity level used by the memcached server. The `level` argument shou
 Returns `1` in case of success and `nil` other wise. In case of failures, another string value will also be returned to describe the error.
 
 [Back to TOC](#table-of-contents)
+
+Cluster Support
+===============
+
+A new module is imported to support memcache cluster based on [consistent hash](https://github.com/openresty/lua-resty-balancer). hashmemcached is a proxy class of memcached implemented by closure. Please notice that this module won't reconnect to a good server when it finds current one is down.
+
+example
+-------
+
+```lua
+local hashmemcached = require "resty.hashmemcached"
+local hmemc, err = hashmemcached.new({
+    {'127.0.0.1', 11211, 2},
+    {'127.0.0.1', 11212, 1}
+}, 'hashmemcached')
+
+-- always flush_all at first
+local result = hmemc:flush_all()
+local serv, res, ok, err
+for serv, res in pairs(result) do
+    ok, err = unpack(res)
+    if not ok then
+        ngx.say("failed to flush ", serv, ", ", err)
+        return
+    end
+end
+
+ngx.say("set")
+
+keys = {'dog', 'puppy', 'cat', 'kitten'}
+values = {32, "I am a little dog", 64, "I am a \nlittle cat\n"}
+local i, key
+for i, key in ipairs(keys) do
+    local ok, err = hmemc:set(key, values[i])
+    if not ok then
+        ngx.say("failed to set ", key, ": ", err)
+    else
+        ngx.say(key, " is stored in ", hmemc:which_server())
+    end
+end
+
+ngx.say("\nget")
+
+for i, key in ipairs(keys) do
+    local res, flags, err = hmemc:get(key)
+    if err then
+        ngx.say("failed to get ", key, ": ", err)
+    elseif not res then
+        ngx.say(key, " not found")
+    else
+        ngx.say(key, ": ", res, " (flags: ", flags, ")")
+    end
+end
+
+hmemc:set_keepalive(10000, 100)
+```
+
+methods
+-------
+below are methods whose behavior changed.
+
+new
+---
+`syntax: hmemc, err = hashmemcached.new(cluster, shm, opts?)`
+
+Creates a hashed memcached object based on the cluster paramter.
+
+* cluster
+    an array of tables containing all memcaches' infomation in the form of `{{ip, port, weight}, ...}`. Here is an example:
+    ```lua
+    {
+        {'127.0.0.1', 11211, 2},
+        {'127.0.0.1', 11212}
+    }
+    ```
+    `weight` is optional, defaut value is 1
+* shm
+    the name of the shared memory zone used to share infomation between worker processes. By defaut, it's `hashmemcached`
+* opts
+    besides `key_transform`, it accepts the following options:
+    * max_fails
+    * fail_timeout
+
+    if a node fails `max_fails` times in `fail_timeout` seconds then this node is considered unavailable in the duration of `fail_timeout`. This policy of remapping imitates the nginx http upstream's server directive.
+
+which_server
+------------
+`syntax: results = hashmemcached:which_server()`
+
+This method is added for debugging purpose. Return currently connnected server's id which is a string of `ip:port`.
+
+flush_all
+---------
+`syntax: server_id = hashmemcached:flush_all()`
+
+call flush_all method of every memcache instance.
+`results` is a table of `{server_id:res}` and res is a table of `{1}` or `{nil, err}`
+
+get(s)
+-----------
+They can accept multiple keys and these keys can be mapped to multiple memcaches.
+The return value is the same as the original version except that it will always return a table whose value is a table of the **data** or `{nil, err}` or `nil` which indicates not found.
 
 Automatic Error Logging
 =======================
