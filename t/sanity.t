@@ -1441,7 +1441,7 @@ successfully set verbosity to level 2
 
             local ok, err = memc:set("cat", "hello\\nworld\\n")
             if not ok then
-                ngx.say("failed to set dog: ", err)
+                ngx.say("failed to set cat: ", err)
                 return
             end
 
