@@ -62,12 +62,25 @@ end
 
 
 function _M.connect(self, ...)
+    self.failed = nil
     local sock = self.sock
     if not sock then
         return nil, "not initialized"
     end
 
     return sock:connect(...)
+end
+
+
+-- a socket error happend the socket is closed then
+local function fail(self, ...)
+    err = select(select('#', ...), ...)
+    ngx.log(ngx.ERR, "failed: ", err)
+    if err == "timeout" then
+        self.sock:close()
+    end
+    self.failed = true
+    return ...
 end
 
 
@@ -107,10 +120,7 @@ local function _multi_get(self, keys)
     while true do
         local line, err = sock:receive()
         if not line then
-            if err == "timeout" then
-                sock:close()
-            end
-            return nil, err
+            return fail(self, nil, err)
         end
 
         if line == 'END' then
@@ -126,20 +136,14 @@ local function _multi_get(self, keys)
 
         local data, err = sock:receive(len)
         if not data then
-            if err == "timeout" then
-                sock:close()
-            end
-            return nil, err
+            return fail(self, nil, err)
         end
 
         results[unescape_key(key)] = {data, flags}
 
         data, err = sock:receive(2) -- discard the trailing CRLF
         if not data then
-            if err == "timeout" then
-                sock:close()
-            end
-            return nil, err
+            return fail(self, nil, err)
         end
     end
 
@@ -164,10 +168,7 @@ function _M.get(self, key)
 
     local line, err = sock:receive()
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, nil, err
+        return fail(self, nil, nil, err)
     end
 
     if line == 'END' then
@@ -183,18 +184,12 @@ function _M.get(self, key)
 
     local data, err = sock:receive(len)
     if not data then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, nil, err
+        return fail(self, nil, nil, err)
     end
 
     line, err = sock:receive(7) -- discard the trailing "\r\nEND\r\n"
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, nil, err
+        return fail(self, nil, nil, err)
     end
 
     return data, flags
@@ -227,7 +222,7 @@ local function _multi_gets(self, keys)
 
     local bytes, err = sock:send(cmd)
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local unescape_key = self.unescape_key
@@ -236,10 +231,7 @@ local function _multi_gets(self, keys)
     while true do
         local line, err = sock:receive()
         if not line then
-            if err == "timeout" then
-                sock:close()
-            end
-            return nil, err
+            return fail(self, nil, err)
         end
 
         if line == 'END' then
@@ -257,20 +249,14 @@ local function _multi_gets(self, keys)
 
         local data, err = sock:receive(len)
         if not data then
-            if err == "timeout" then
-                sock:close()
-            end
-            return nil, err
+            return fail(self, nil, err)
         end
 
         results[unescape_key(key)] = {data, flags, cas_uniq}
 
         data, err = sock:receive(2) -- discard the trailing CRLF
         if not data then
-            if err == "timeout" then
-                sock:close()
-            end
-            return nil, err
+            return fail(self, nil, err)
         end
     end
 
@@ -290,15 +276,12 @@ function _M.gets(self, key)
 
     local bytes, err = sock:send("gets " .. self.escape_key(key) .. "\r\n")
     if not bytes then
-        return nil, nil, err
+        return fail(self, nil, nil, err)
     end
 
     local line, err = sock:receive()
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, nil, nil, err
+        return fail(self, nil, nil, nil, err)
     end
 
     if line == 'END' then
@@ -314,18 +297,12 @@ function _M.gets(self, key)
 
     local data, err = sock:receive(len)
     if not data then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, nil, nil, err
+        return fail(self, nil, nil, nil, err)
     end
 
     line, err = sock:receive(7) -- discard the trailing "\r\nEND\r\n"
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, nil, nil, err
+        return fail(self, nil, nil, nil, err)
     end
 
     return data, flags, cas_uniq
@@ -372,15 +349,12 @@ local function _store(self, cmd, key, value, exptime, flags)
                 .. "\r\n"
     local bytes, err = sock:send(req)
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local data, err = sock:receive()
     if not data then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
+        return fail(self, nil, err)
     end
 
     if data == "STORED" then
@@ -439,15 +413,12 @@ function _M.cas(self, key, value, cas_uniq, exptime, flags)
 
     local bytes, err = sock:send(req)
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local line, err = sock:receive()
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
+        return fail(self, nil, err)
     end
 
     -- print("response: [", line, "]")
@@ -472,15 +443,12 @@ function _M.delete(self, key)
 
     local bytes, err = sock:send(req)
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local res, err = sock:receive()
     if not res then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
+        return fail(self, nil, err)
     end
 
     if res ~= 'DELETED' then
@@ -526,15 +494,12 @@ function _M.flush_all(self, time)
 
     local bytes, err = sock:send(req)
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local res, err = sock:receive()
     if not res then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
+        return fail(self, nil, err)
     end
 
     if res ~= 'OK' then
@@ -555,15 +520,12 @@ local function _incr_decr(self, cmd, key, value)
 
     local bytes, err = sock:send(req)
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local line, err = sock:receive()
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
+        return fail(self, nil, err)
     end
 
     if not match(line, '^%d+$') then
@@ -599,7 +561,7 @@ function _M.stats(self, args)
 
     local bytes, err = sock:send(req)
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local lines = {}
@@ -607,10 +569,7 @@ function _M.stats(self, args)
     while true do
         local line, err = sock:receive()
         if not line then
-            if err == "timeout" then
-                sock:close()
-            end
-            return nil, err
+            return fail(self, nil, err)
         end
 
         if line == 'END' then
@@ -638,15 +597,12 @@ function _M.version(self)
 
     local bytes, err = sock:send("version\r\n")
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local line, err = sock:receive()
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local ver = match(line, "^VERSION (.+)$")
@@ -666,7 +622,7 @@ function _M.quit(self)
 
     local bytes, err = sock:send("quit\r\n")
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     return 1
@@ -681,15 +637,12 @@ function _M.verbosity(self, level)
 
     local bytes, err = sock:send("verbosity " .. level .. "\r\n")
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local line, err = sock:receive()
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
+        return fail(self, nil, err)
     end
 
     if line ~= 'OK' then
@@ -709,15 +662,12 @@ function _M.touch(self, key, exptime)
     local bytes, err = sock:send("touch " .. self.escape_key(key) .. " "
                                  .. exptime .. "\r\n")
     if not bytes then
-        return nil, err
+        return fail(self, nil, err)
     end
 
     local line, err = sock:receive()
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
+        return fail(self, nil, err)
     end
 
     -- moxi server from couchbase returned stored after touching

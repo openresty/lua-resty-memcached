@@ -830,17 +830,17 @@ dog: 32 (flags: 526)
                 return
             end
 
-            local res, flags, err = memc:get("dog")
-            if err then
-                ngx.say("failed to get dog: ", err)
+            local ok, err = memc:set("dog", 32, 1, 526)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
                 return
             end
 
             ngx.location.capture("/sleep");
 
-            local ok, err = memc:set("dog", 32, 1, 526)
-            if not ok then
-                ngx.say("failed to set dog: ", err)
+            local res, flags, err = memc:get("dog")
+            if err then
+                ngx.say("failed to get dog: ", err)
                 return
             end
 
@@ -863,6 +863,7 @@ GET /t
 dog not found
 --- no_error_log
 [error]
+--- only
 
 
 
@@ -1440,7 +1441,7 @@ successfully set verbosity to level 2
 
             local ok, err = memc:set("cat", "hello\\nworld\\n")
             if not ok then
-                ngx.say("failed to set dog: ", err)
+                ngx.say("failed to set cat: ", err)
                 return
             end
 

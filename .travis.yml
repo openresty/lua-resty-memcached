@@ -47,6 +47,7 @@ install:
   - git clone https://github.com/openresty/echo-nginx-module.git ../echo-nginx-module
   - git clone https://github.com/openresty/no-pool-nginx.git ../no-pool-nginx
   - git clone -b v2.1-agentzh https://github.com/openresty/luajit2.git
+  - git clone https://github.com/openresty/lua-resty-balancer.git ../lua-resty-balancer
   - git clone https://github.com/openresty/mockeagain.git
 
 script:
@@ -60,6 +61,9 @@ script:
   - make -j$JOBS > build.log 2>&1 || (cat build.log && exit 1)
   - sudo make PATH=$PATH install_sw > build.log 2>&1 || (cat build.log && exit 1)
   - cd ../mockeagain/ && make CC=$CC -j$JOBS && cd ..
+  - make -C ../lua-resty-balancer
+  - cp -r ../lua-resty-balancer/lib/resty ../lua-resty-balancer/librestychash.so lib
+  - memcached -p 11212 -d -m 1024
   - export PATH=$PWD/work/nginx/sbin:$PWD/nginx-devel-utils:$PATH
   - export LD_PRELOAD=$PWD/mockeagain/mockeagain.so
   - export LD_LIBRARY_PATH=$PWD/mockeagain:$LD_LIBRARY_PATH
