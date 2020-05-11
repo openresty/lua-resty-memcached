@@ -290,7 +290,7 @@ function _M.gets(self, key)
 
     local bytes, err = sock:send("gets " .. self.escape_key(key) .. "\r\n")
     if not bytes then
-        return nil, nil, err
+        return nil, nil, nil, err
     end
 
     local line, err = sock:receive()
