@@ -13,6 +13,7 @@ Table of Contents
 * [Methods](#methods)
     * [new](#new)
     * [connect](#connect)
+    * [sslhandshake](#sslhandshake)
     * [set](#set)
     * [set_timeout](#set_timeout)
     * [set_keepalive](#set_keepalive)
@@ -170,6 +171,17 @@ connect
 Attempts to connect to the remote host and port that the memcached server is listening to or a local unix domain socket file listened by the memcached server.
 
 Before actually resolving the host name and connecting to the remote backend, this method will always look up the connection pool for matched idle connections created by previous calls of this method.
+
+[Back to TOC](#table-of-contents)
+
+sslhandshake
+------------
+
+**syntax:** *session, err = memc:sslhandshake(reused_session?, server_name?, ssl_verify?, send_status_req?)*
+
+Does SSL/TLS handshake on the currently established connection. See the
+[tcpsock.sslhandshake](https://github.com/openresty/lua-nginx-module#tcpsocksslhandshake)
+API from OpenResty for more details.
 
 [Back to TOC](#table-of-contents)
 

@@ -69,6 +69,16 @@ function _M.connect(self, ...)
 end
 
 
+function _M.sslhandshake(self, ...)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    return sock:sslhandshake(...)
+end
+
+
 local function _multi_get(self, keys)
     local sock = self.sock
     if not sock then
