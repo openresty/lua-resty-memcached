@@ -2195,7 +2195,7 @@ world
 
 
 
-=== TEST 39: basic with set_timeouts
+=== TEST 39: pipeline execute multi commands
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -2203,39 +2203,189 @@ world
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            assert(memc:set_timeouts(1000, 1000, 1000))
+            memc:set_timeout(1000) -- 1 sec
 
-            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT);
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
             end
-
-            local ok, err = memc:flush_all()
-            if not ok then
-                ngx.say("failed to flush all: ", err)
+            local vals, err
+            err = memc:init_pipeline()
+            if err then
+                ngx.say(err)
                 return
             end
 
-            local ok, err = memc:set("dog", 32)
-            if not ok then
-                ngx.say("failed to set dog: ", err)
+            memc:set("age", 10, 30, 4)
+            memc:set("name", "value")
+            memc:get("age")
+            memc:get("name")
+            memc:incr("age", 3)
+            memc:add("name", "-haha")
+            memc:delete("name")
+
+            vals, err = memc:commit_pipeline()
+            if err then
+                ngx.say(err)
                 return
             end
 
-            for i = 1, 2 do
-                local res, flags, err = memc:get("dog")
-                if err then
-                    ngx.say("failed to get dog: ", err)
-                    return
-                end
+            for i,v in ipairs(vals) do
+                ngx.say((vals[i][1] or "")..(vals[i][2] or "")..(vals[i][3] or ""))
+            end
+            vals, err = memc:delete("name")
+            if err then
+                ngx.say(err)
+            end
+            memc:close()
+        }
+    }
+--- request
+GET /t
+--- response_body
+1
+1
+104
+value0
+13
+NOT_STORED
+1
+NOT_FOUND
+--- no_error_log
+[error]
 
-                if not res then
-                    ngx.say("dog not found")
-                    return
-                end
 
-                ngx.say("dog: ", res, " (flags: ", flags, ")")
+=== TEST 40: pipeline commands buffer empty
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:set_timeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT);
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+            local vals, err
+            err = memc:init_pipeline()
+            if err then
+                ngx.say("init: ", err)
+                return
+            end
+
+            vals, err = memc:commit_pipeline()
+            if err then
+                ngx.say("commit: ", err)
+                return
+            end
+            memc:close()
+        }
+    }
+--- request
+GET /t
+--- response_body
+commit: no more cmds
+--- no_error_log
+[error]
+
+=== TEST 41: pipeline repeat commit
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:set_timeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT);
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+            local vals, err
+            err = memc:init_pipeline()
+            if err then
+                ngx.say("init: ", err)
+                return
+            end
+            memc:set("touch_key", "touch_value")
+            memc:touch("touch_key", 60)
+            memc:stats("items")
+            vals, err = memc:commit_pipeline()
+            if err then
+                ngx.say("commit: ", err)
+                return
+            end
+            if vals[1][2] then
+                ngx.say('err: ', vals[1][2])
+            else
+                ngx.say('return: ', vals[1][1])
+            end
+
+            if vals[2][2] then
+                ngx.say('err: ', vals[2][2])
+            else
+                ngx.say('return: ', vals[2][1])
+            end
+
+            if vals[3][2] then
+                ngx.say('err: ', vals[3][2])
+            else
+                ngx.say('return: ', #vals[3][1])
+            end
+            vals, err = memc:commit_pipeline()
+            if err then
+                ngx.say("commit: ", err)
+            end
+
+            memc:close()
+        }
+    }
+--- request
+GET /t
+--- response_body_like chop
+return: 1
+return: 1
+return: \d+
+commit: no pipeline
+--- no_error_log
+[error]
+
+=== TEST 42: pipeline repeat init
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:set_timeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT);
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+            local vals, err
+            err = memc:init_pipeline()
+            if err then
+                ngx.say("init: ", err)
+                return
+            end
+
+            memc:set("init_key", "init_value")
+            memc:touch("init_key", 60)
+
+            err = memc:init_pipeline()
+            if err then
+                ngx.say("init: ", err)
+                return
             end
 
             memc:close()
@@ -2244,8 +2394,82 @@ world
 --- request
 GET /t
 --- response_body
-dog: 32 (flags: 0)
-dog: 32 (flags: 0)
+init: already init pipeline
 --- no_error_log
 [error]
 
+
+=== TEST 43: pipeline cancel
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:set_timeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT);
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+            local vals, err
+            err = memc:init_pipeline()
+            if err then
+                ngx.say("init: ", err)
+                return
+            end
+
+            memc:set("cancel_key", "cancel_value")
+            memc:touch("cancel_key", 60)
+
+            memc:cancel_pipeline()
+            _, err = memc:commit_pipeline()
+            if err then
+                ngx.say("init: ", err)
+                return
+            end
+
+            memc:close()
+        }
+    }
+--- request
+GET /t
+--- response_body
+init: no pipeline
+--- no_error_log
+[error]
+
+
+=== TEST 44: pipeline init buffer size error
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            memc:set_timeout(1000) -- 1 sec
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT);
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+            local vals, err
+            err = memc:init_pipeline('x')
+            if err then
+                ngx.say("init: ", err)
+                return
+            end
+
+            memc:close()
+        }
+    }
+--- request
+GET /t
+--- response_body
+init: buffer size is number type
+--- no_error_log
+[error]
