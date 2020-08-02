@@ -18,6 +18,10 @@ local _M = {
 
 local mt = { __index = _M }
 
+local ok, new_tab = pcall(require, "table.new")
+if not ok or type(new_tab) ~= "function" then
+    new_tab = function (narr, nrec) return {} end
+end
 
 function _M.new(self, opts)
     local sock, err = tcp()
@@ -831,8 +835,8 @@ function _M.init_pipeline(self, n)
         return "buffer size is number type"
     end
     self._reqs = {
-        table.new(n or 4, 0),
-        table.new(n or 4, 0),
+        new_tab(n or 4, 0),
+        new_tab(n or 4, 0),
     }
     return nil
 end
@@ -856,13 +860,13 @@ function _M.commit_pipeline(self)
     if #self._reqs[1] == 0 then
         return nil, "no more cmds"
     end
-    local bytes, err = sock:send(table.concat(reqs[1]))
+    local bytes, err = sock:send(concat(reqs[1]))
     if not bytes then
         return nil, err
     end
 
     local results = {}
-    for i=1,#reqs[2] do
+    for i=1, #reqs[2] do
         results[i] = { reqs[2][i](sock) }
     end
     self._reqs = nil
