@@ -23,6 +23,22 @@ if not ok or type(new_tab) ~= "function" then
     new_tab = function (narr, nrec) return {} end
 end
 
+local function _read_reply(sock, len) 
+    local line, err 
+    if len == nil then
+        line, err = sock:receive()
+    else
+        line, err = sock:receive(len)
+    end
+    if not line then
+        if err == "timeout" then
+            sock:close()
+        end
+        return nil, err
+    end
+    return line, nil
+end
+
 function _M.new(self, opts)
     local sock, err = tcp()
     if not sock then
@@ -164,11 +180,8 @@ local function _multi_get(self, keys)
 end
 
 local function _get_reply(sock)
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    local line, err = _read_reply(sock)
+    if err then
         return nil, nil, err
     end
 
@@ -182,20 +195,13 @@ local function _get_reply(sock)
     end
 
     -- print("len: ", len, ", flags: ", flags)
-
-    local data, err = sock:receive(len)
-    if not data then
-        if err == "timeout" then
-            sock:close()
-        end
+    local data, err = _read_reply(sock, len)
+    if err then
         return nil, nil, err
     end
 
-    line, err = sock:receive(7) -- discard the trailing "\r\nEND\r\n"
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    line, err = _read_reply(sock, 7) -- discard the trailing "\r\nEND\r\n"
+    if err then
         return nil, nil, err
     end
 
@@ -262,11 +268,8 @@ local function _multi_gets(self, keys)
     local results = {}
 
     while true do
-        local line, err = sock:receive()
-        if not line then
-            if err == "timeout" then
-                sock:close()
-            end
+        local line, err = _read_reply(sock)
+        if err then
             return nil, err
         end
 
@@ -283,21 +286,14 @@ local function _multi_gets(self, keys)
             return nil, line
         end
 
-        local data, err = sock:receive(len)
-        if not data then
-            if err == "timeout" then
-                sock:close()
-            end
+        local data, err = _read_reply(sock, len)
+        if err then
             return nil, err
         end
 
         results[unescape_key(key)] = {data, flags, cas_uniq}
-
-        data, err = sock:receive(2) -- discard the trailing CRLF
-        if not data then
-            if err == "timeout" then
-                sock:close()
-            end
+        data, err = _read_reply(sock, 2) -- discard the trailing CRLF
+        if err then
             return nil, err
         end
     end
@@ -321,11 +317,8 @@ function _M.gets(self, key)
         return nil, nil, nil, err
     end
 
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    local line, err = _read_reply(sock)
+    if err then
         return nil, nil, nil, err
     end
 
@@ -340,19 +333,13 @@ function _M.gets(self, key)
 
     -- print("len: ", len, ", flags: ", flags)
 
-    local data, err = sock:receive(len)
+    local data, err = _read_reply(sock, len)
     if not data then
-        if err == "timeout" then
-            sock:close()
-        end
         return nil, nil, nil, err
     end
 
-    line, err = sock:receive(7) -- discard the trailing "\r\nEND\r\n"
+    line, err = _read_reply(sock, 7) -- discard the trailing "\r\nEND\r\n"
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
         return nil, nil, nil, err
     end
 
@@ -377,11 +364,8 @@ local function _expand_table(value)
 end
 
 local function _store_reply(sock)
-    local data, err = sock:receive()
-    if not data then
-        if err == "timeout" then
-            sock:close()
-        end
+    local data, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -479,11 +463,8 @@ function _M.cas(self, key, value, cas_uniq, exptime, flags)
         return nil, err
     end
 
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    local line, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -497,11 +478,8 @@ function _M.cas(self, key, value, cas_uniq, exptime, flags)
 end
 
 local function _delete_reply(sock)
-    local res, err = sock:receive()
-    if not res then
-        if err == "timeout" then
-            sock:close()
-        end
+    local res, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -575,11 +553,8 @@ function _M.flush_all(self, time)
         return nil, err
     end
 
-    local res, err = sock:receive()
-    if not res then
-        if err == "timeout" then
-            sock:close()
-        end
+    local res, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -591,11 +566,8 @@ function _M.flush_all(self, time)
 end
 
 local function _incr_decr_reply(sock) 
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    local line, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -643,11 +615,8 @@ local function _stats_reply(sock)
     local lines = {}
     local n = 0
     while true do
-        local line, err = sock:receive()
-        if not line then
-            if err == "timeout" then
-                sock:close()
-            end
+        local line, err = _read_reply(sock)
+        if err then
             return nil, err
         end
 
@@ -696,11 +665,8 @@ function _M.stats(self, args)
 end
 
 local function _version_reply(sock)
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    local line, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -741,11 +707,8 @@ function _M.quit(self)
 end
 
 local function _verbosity_reply(sock)
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    local line, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -779,11 +742,8 @@ function _M.verbosity(self, level)
 end
 
 local function _touch_reply(sock)
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    local line, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
