@@ -18,6 +18,26 @@ local _M = {
 
 local mt = { __index = _M }
 
+local ok, new_tab = pcall(require, "table.new")
+if not ok or type(new_tab) ~= "function" then
+    new_tab = function (narr, nrec) return {} end
+end
+
+local function _read_reply(sock, len) 
+    local line, err 
+    if len == nil then
+        line, err = sock:receive()
+    else
+        line, err = sock:receive(len)
+    end
+    if not line then
+        if err == "timeout" then
+            sock:close()
+        end
+        return nil, err
+    end
+    return line, nil
+end
 
 function _M.new(self, opts)
     local sock, err = tcp()
@@ -144,27 +164,9 @@ local function _multi_get(self, keys)
     return results
 end
 
-
-function _M.get(self, key)
-    if type(key) == "table" then
-        return _multi_get(self, key)
-    end
-
-    local sock = self.sock
-    if not sock then
-        return nil, nil, "not initialized"
-    end
-
-    local bytes, err = sock:send("get " .. self.escape_key(key) .. "\r\n")
-    if not bytes then
-        return nil, nil, err
-    end
-
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+local function _get_reply(sock)
+    local line, err = _read_reply(sock)
+    if err then
         return nil, nil, err
     end
 
@@ -178,24 +180,43 @@ function _M.get(self, key)
     end
 
     -- print("len: ", len, ", flags: ", flags)
-
-    local data, err = sock:receive(len)
-    if not data then
-        if err == "timeout" then
-            sock:close()
-        end
+    local data, err = _read_reply(sock, len)
+    if err then
         return nil, nil, err
     end
 
-    line, err = sock:receive(7) -- discard the trailing "\r\nEND\r\n"
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    line, err = _read_reply(sock, 7) -- discard the trailing "\r\nEND\r\n"
+    if err then
         return nil, nil, err
     end
 
     return data, flags
+end
+
+function _M.get(self, key)
+    if type(key) == "table" then
+        return _multi_get(self, key)
+    end
+
+    local sock = self.sock
+    if not sock then
+        return nil, nil, "not initialized"
+    end
+
+    local req = "get " .. self.escape_key(key) .. "\r\n"
+    local reqs = rawget(self, "_reqs")
+    if reqs then
+        reqs[1][#reqs[1] + 1] = req
+        reqs[2][#reqs[2] + 1] = _get_reply
+        return 1
+    end
+
+    local bytes, err = sock:send(req)
+    if not bytes then
+        return nil, nil, err
+    end
+
+    return _get_reply(sock)
 end
 
 
@@ -232,11 +253,8 @@ local function _multi_gets(self, keys)
     local results = {}
 
     while true do
-        local line, err = sock:receive()
-        if not line then
-            if err == "timeout" then
-                sock:close()
-            end
+        local line, err = _read_reply(sock)
+        if err then
             return nil, err
         end
 
@@ -253,21 +271,14 @@ local function _multi_gets(self, keys)
             return nil, line
         end
 
-        local data, err = sock:receive(len)
-        if not data then
-            if err == "timeout" then
-                sock:close()
-            end
+        local data, err = _read_reply(sock, len)
+        if err then
             return nil, err
         end
 
         results[unescape_key(key)] = {data, flags, cas_uniq}
-
-        data, err = sock:receive(2) -- discard the trailing CRLF
-        if not data then
-            if err == "timeout" then
-                sock:close()
-            end
+        data, err = _read_reply(sock, 2) -- discard the trailing CRLF
+        if err then
             return nil, err
         end
     end
@@ -291,11 +302,8 @@ function _M.gets(self, key)
         return nil, nil, nil, err
     end
 
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    local line, err = _read_reply(sock)
+    if err then
         return nil, nil, nil, err
     end
 
@@ -310,19 +318,13 @@ function _M.gets(self, key)
 
     -- print("len: ", len, ", flags: ", flags)
 
-    local data, err = sock:receive(len)
+    local data, err = _read_reply(sock, len)
     if not data then
-        if err == "timeout" then
-            sock:close()
-        end
         return nil, nil, nil, err
     end
 
-    line, err = sock:receive(7) -- discard the trailing "\r\nEND\r\n"
+    line, err = _read_reply(sock, 7) -- discard the trailing "\r\nEND\r\n"
     if not line then
-        if err == "timeout" then
-            sock:close()
-        end
         return nil, nil, nil, err
     end
 
@@ -346,6 +348,18 @@ local function _expand_table(value)
     return concat(segs)
 end
 
+local function _store_reply(sock)
+    local data, err = _read_reply(sock)
+    if err then
+        return nil, err
+    end
+
+    if data == "STORED" then
+        return 1
+    end
+
+    return nil, data
+end
 
 local function _store(self, cmd, key, value, exptime, flags)
     if not exptime then
@@ -368,24 +382,18 @@ local function _store(self, cmd, key, value, exptime, flags)
     local req = cmd .. " " .. self.escape_key(key) .. " " .. flags .. " "
                 .. exptime .. " " .. strlen(value) .. "\r\n" .. value
                 .. "\r\n"
+    local reqs = rawget(self, "_reqs")
+    if reqs then
+        reqs[1][#reqs[1] + 1] = req
+        reqs[2][#reqs[2] + 1] = _store_reply
+        return 1
+    end
     local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
 
-    local data, err = sock:receive()
-    if not data then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
-    end
-
-    if data == "STORED" then
-        return 1
-    end
-
-    return nil, data
+    return _store_reply(sock)
 end
 
 
@@ -440,11 +448,8 @@ function _M.cas(self, key, value, cas_uniq, exptime, flags)
         return nil, err
     end
 
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    local line, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -457,6 +462,18 @@ function _M.cas(self, key, value, cas_uniq, exptime, flags)
     return nil, line
 end
 
+local function _delete_reply(sock)
+    local res, err = _read_reply(sock)
+    if err then
+        return nil, err
+    end
+
+    if res ~= 'DELETED' then
+        return nil, res
+    end
+
+    return 1
+end
 
 function _M.delete(self, key)
     local sock = self.sock
@@ -467,25 +484,19 @@ function _M.delete(self, key)
     key = self.escape_key(key)
 
     local req = "delete " .. key .. "\r\n"
+    local reqs = rawget(self, "_reqs")
+    if reqs then
+        reqs[1][#reqs[1] + 1] = req
+        reqs[2][#reqs[2] + 1] = _delete_reply
+        return 1
+    end
 
     local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
 
-    local res, err = sock:receive()
-    if not res then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
-    end
-
-    if res ~= 'DELETED' then
-        return nil, res
-    end
-
-    return 1
+    return _delete_reply(sock)
 end
 
 
@@ -527,11 +538,8 @@ function _M.flush_all(self, time)
         return nil, err
     end
 
-    local res, err = sock:receive()
-    if not res then
-        if err == "timeout" then
-            sock:close()
-        end
+    local res, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -542,25 +550,9 @@ function _M.flush_all(self, time)
     return 1
 end
 
-
-local function _incr_decr(self, cmd, key, value)
-    local sock = self.sock
-    if not sock then
-        return nil, "not initialized"
-    end
-
-    local req = cmd .. " " .. self.escape_key(key) .. " " .. value .. "\r\n"
-
-    local bytes, err = sock:send(req)
-    if not bytes then
-        return nil, err
-    end
-
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+local function _incr_decr_reply(sock) 
+    local line, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -569,6 +561,28 @@ local function _incr_decr(self, cmd, key, value)
     end
 
     return line
+end
+
+local function _incr_decr(self, cmd, key, value)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local req = cmd .. " " .. self.escape_key(key) .. " " .. value .. "\r\n"
+    local reqs = rawget(self, "_reqs")
+    if reqs then
+        reqs[1][#reqs[1] + 1] = req
+        reqs[2][#reqs[2] + 1] = _incr_decr_reply
+        return 1
+    end
+
+    local bytes, err = sock:send(req)
+    if not bytes then
+        return nil, err
+    end
+
+    return _incr_decr_reply(sock)
 end
 
 
@@ -582,32 +596,12 @@ function _M.decr(self, key, value)
 end
 
 
-function _M.stats(self, args)
-    local sock = self.sock
-    if not sock then
-        return nil, "not initialized"
-    end
-
-    local req
-    if args then
-        req = "stats " .. args .. "\r\n"
-    else
-        req = "stats\r\n"
-    end
-
-    local bytes, err = sock:send(req)
-    if not bytes then
-        return nil, err
-    end
-
+local function _stats_reply(sock)
     local lines = {}
     local n = 0
     while true do
-        local line, err = sock:receive()
-        if not line then
-            if err == "timeout" then
-                sock:close()
-            end
+        local line, err = _read_reply(sock)
+        if err then
             return nil, err
         end
 
@@ -627,6 +621,47 @@ function _M.stats(self, args)
     return lines
 end
 
+function _M.stats(self, args)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local req
+    if args then
+        req = "stats " .. args .. "\r\n"
+    else
+        req = "stats\r\n"
+    end
+
+    local reqs = rawget(self, "_reqs")
+    if reqs then
+        reqs[1][#reqs[1] + 1] = req
+        reqs[2][#reqs[2] + 1] = _stats_reply
+        return 1
+    end
+
+    local bytes, err = sock:send(req)
+    if not bytes then
+        return nil, err
+    end
+
+    return _stats_reply(sock)
+end
+
+local function _version_reply(sock)
+    local line, err = _read_reply(sock)
+    if err then
+        return nil, err
+    end
+
+    local ver = match(line, "^VERSION (.+)$")
+    if not ver then
+        return nil, ver
+    end
+
+    return ver
+end
 
 function _M.version(self)
     local sock = self.sock
@@ -639,22 +674,8 @@ function _M.version(self)
         return nil, err
     end
 
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
-        return nil, err
-    end
-
-    local ver = match(line, "^VERSION (.+)$")
-    if not ver then
-        return nil, ver
-    end
-
-    return ver
+    return _version_reply(sock)
 end
-
 
 function _M.quit(self)
     local sock = self.sock
@@ -670,23 +691,9 @@ function _M.quit(self)
     return 1
 end
 
-
-function _M.verbosity(self, level)
-    local sock = self.sock
-    if not sock then
-        return nil, "not initialized"
-    end
-
-    local bytes, err = sock:send("verbosity " .. level .. "\r\n")
-    if not bytes then
-        return nil, err
-    end
-
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+local function _verbosity_reply(sock)
+    local line, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -697,24 +704,31 @@ function _M.verbosity(self, level)
     return 1
 end
 
-
-function _M.touch(self, key, exptime)
+function _M.verbosity(self, level)
     local sock = self.sock
     if not sock then
         return nil, "not initialized"
     end
 
-    local bytes, err = sock:send("touch " .. self.escape_key(key) .. " "
-                                 .. exptime .. "\r\n")
+    local req = "verbosity " .. level .. "\r\n"
+    local reqs = rawget(self, "_reqs")
+    if reqs then
+        reqs[1][#reqs[1] + 1] = req
+        reqs[2][#reqs[2] + 1] = _verbosity_reply
+        return 1
+    end
+
+    local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
     end
 
-    local line, err = sock:receive()
-    if not line then
-        if err == "timeout" then
-            sock:close()
-        end
+    return _verbosity_reply(sock)
+end
+
+local function _touch_reply(sock)
+    local line, err = _read_reply(sock)
+    if err then
         return nil, err
     end
 
@@ -725,6 +739,27 @@ function _M.touch(self, key, exptime)
     return nil, line
 end
 
+function _M.touch(self, key, exptime)
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    local req = "touch " .. self.escape_key(key) .. " ".. exptime .. "\r\n"
+    local reqs = rawget(self, "_reqs")
+    if reqs then
+        reqs[1][#reqs[1] + 1] = req
+        reqs[2][#reqs[2] + 1] = _touch_reply
+        return 1
+    end
+
+    local bytes, err = sock:send(req)
+    if not bytes then
+        return nil, err
+    end
+
+    return _touch_reply(sock)
+end
 
 function _M.close(self)
     local sock = self.sock
@@ -735,5 +770,52 @@ function _M.close(self)
     return sock:close()
 end
 
+
+function _M.init_pipeline(self, n)
+    if self._reqs then 
+        return "already init pipeline"
+    end
+
+    if n and type(n) ~= 'number' then
+        return "buffer size is number type"
+    end
+    self._reqs = {
+        new_tab(n or 4, 0),
+        new_tab(n or 4, 0),
+    }
+    return nil
+end
+
+
+function _M.cancel_pipeline(self)
+    self._reqs = nil
+end
+
+
+function _M.commit_pipeline(self)
+    local reqs = rawget(self, "_reqs")
+    if not reqs then
+        return nil, "no pipeline"
+    end
+    local sock = self.sock
+    if not sock then
+        return nil, "not initialized"
+    end
+
+    if #self._reqs[1] == 0 then
+        return nil, "no more cmds"
+    end
+    local bytes, err = sock:send(concat(reqs[1]))
+    if not bytes then
+        return nil, err
+    end
+
+    local results = {}
+    for i=1, #reqs[2] do
+        results[i] = { reqs[2][i](sock) }
+    end
+    self._reqs = nil
+    return results, nil
+end
 
 return _M
