@@ -48,14 +48,19 @@ function _M.new(self, opts)
 end
 
 
-function _M.set_timeout(self, timeout)
+function _M.set_timeouts(self, connect, send, read)
     local sock = self.sock
     if not sock then
         return nil, "not initialized"
     end
 
-    sock:settimeout(timeout)
+    sock:settimeouts(connect, send, read)
     return 1
+end
+local set_timeouts = _M.set_timeouts
+
+function _M.set_timeout(self, timeout)
+    return set_timeouts(timeout, timeout, timeout)
 end
 
 

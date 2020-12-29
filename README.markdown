@@ -15,6 +15,7 @@ Table of Contents
     * [connect](#connect)
     * [set](#set)
     * [set_timeout](#set_timeout)
+    * [set_timeouts](#set_timeouts)
     * [set_keepalive](#set_keepalive)
     * [get_reused_times](#get_reused_times)
     * [close](#close)
@@ -201,13 +202,21 @@ The `flags` parameter is optional and defaults to `0`.
 
 set_timeout
 ----------
-`syntax: ok, err = memc:set_timeout(time)`
+`syntax: ok, err = memc:set_timeout(timeout)`
 
 Sets the timeout (in ms) protection for subsequent operations, including the `connect` method.
 
 Returns 1 when successful and nil plus a string describing the error otherwise.
 
 [Back to TOC](#table-of-contents)
+
+set_timeouts
+----------
+`syntax: ok, err = memc:set_timeouts(connect_timeout, send_timeout, read_timeout)`
+
+Sets the timeouts (in ms) for connect, send and read operations respectively.
+
+Returns 1 when successful and nil plus a string describing the error otherwise.
 
 set_keepalive
 ------------

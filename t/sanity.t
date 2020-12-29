@@ -86,7 +86,8 @@ dog: 32 (flags: 0)
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            memc:set_timeout(1000) -- 1 sec
+            -- 1 sec for all connect, read and send timeouts
+            memc:set_timeouts(1000, 1000, 1000)
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
