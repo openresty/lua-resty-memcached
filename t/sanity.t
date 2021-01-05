@@ -2193,3 +2193,59 @@ world
 --- no_error_log
 [error]
 
+
+
+=== TEST 39: basic with set_timeouts
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local memcached = require "resty.memcached"
+            local memc = memcached:new()
+
+            assert(memc:set_timeouts(1000, 1000, 1000))
+
+            local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local ok, err = memc:flush_all()
+            if not ok then
+                ngx.say("failed to flush all: ", err)
+                return
+            end
+
+            local ok, err = memc:set("dog", 32)
+            if not ok then
+                ngx.say("failed to set dog: ", err)
+                return
+            end
+
+            for i = 1, 2 do
+                local res, flags, err = memc:get("dog")
+                if err then
+                    ngx.say("failed to get dog: ", err)
+                    return
+                end
+
+                if not res then
+                    ngx.say("dog not found")
+                    return
+                end
+
+                ngx.say("dog: ", res, " (flags: ", flags, ")")
+            end
+
+            memc:close()
+        }
+    }
+--- request
+GET /t
+--- response_body
+dog: 32 (flags: 0)
+dog: 32 (flags: 0)
+--- no_error_log
+[error]
+
