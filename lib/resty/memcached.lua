@@ -12,7 +12,7 @@ local type = type
 
 
 local _M = {
-    _VERSION = '0.15'
+    _VERSION = '0.16'
 }
 
 
