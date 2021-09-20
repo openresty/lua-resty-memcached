@@ -1,5 +1,9 @@
 sudo: required
-dist: trusty
+dist: focal
+
+branches:
+  only:
+    - "master"
 
 os: linux
 
@@ -7,6 +11,17 @@ language: c
 
 compiler:
   - gcc
+
+addons:
+  apt:
+    packages:
+    - memcached
+    - time
+    - psmisc
+    - net-tools
+    - libevent-dev
+    - libssl1.1
+    - libssl-dev
 
 cache:
   directories:
@@ -24,16 +39,17 @@ env:
     - OPENSSL_PREFIX=/opt/ssl
     - OPENSSL_LIB=$OPENSSL_PREFIX/lib
     - OPENSSL_INC=$OPENSSL_PREFIX/include
-    - OPENSSL_VER=1.1.1k
+    - OPENSSL_VER=1.1.1l
     - LD_LIBRARY_PATH=$LUAJIT_LIB:$LD_LIBRARY_PATH
     - TEST_NGINX_SLEEP=0.006
+    - MEMCACHED_VERSION=1.6.10
   matrix:
-    - NGINX_VERSION=1.17.8
     - NGINX_VERSION=1.19.9
 
 install:
   - if [ ! -d download-cache ]; then mkdir download-cache; fi
   - if [ ! -f download-cache/openssl-$OPENSSL_VER.tar.gz ]; then wget -O download-cache/openssl-$OPENSSL_VER.tar.gz https://www.openssl.org/source/openssl-$OPENSSL_VER.tar.gz; fi
+  - wget https://memcached.org/files/memcached-${MEMCACHED_VERSION}.tar.gz
   - sudo apt-get install -qq -y cpanminus axel
   - sudo cpanm --notest Test::Nginx > build.log 2>&1 || (cat build.log && exit 1)
   - wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
@@ -49,6 +65,10 @@ install:
   - git clone https://github.com/openresty/mockeagain.git
 
 script:
+  - tar -xf memcached-${MEMCACHED_VERSION}.tar.gz
+  - cd memcached-${MEMCACHED_VERSION} && ./configure --enable-tls && make && sudo make install && cd ..
+  - sudo /usr/local/bin/memcached -u nobody -d -o track_sizes -U 11211 -p 11211 -l 127.0.0.1
+  - sudo /usr/local/bin/memcached -u nobody -d -Z -o track_sizes -o ssl_chain_cert=./t/cert/server.crt -o ssl_key=./t/cert/server.key -p 11212 -l 127.0.0.1
   - cd luajit2/
   - make -j$JOBS CCDEBUG=-g Q= PREFIX=$LUAJIT_PREFIX CC=$CC XCFLAGS='-DLUA_USE_APICHECK -DLUA_USE_ASSERT' > build.log 2>&1 || (cat build.log && exit 1)
   - sudo make install PREFIX=$LUAJIT_PREFIX > build.log 2>&1 || (cat build.log && exit 1)
@@ -59,12 +79,12 @@ script:
   - make -j$JOBS > build.log 2>&1 || (cat build.log && exit 1)
   - sudo make PATH=$PATH install_sw > build.log 2>&1 || (cat build.log && exit 1)
   - cd ../mockeagain/ && make CC=$CC -j$JOBS && cd ..
-  - export PATH=$PWD/work/nginx/sbin:$PWD/nginx-devel-utils:$PATH
+  - export PATH=$PWD/work/nginx/sbin:$PWD/nginx-devel-utils:/usr/local/bin:$PATH
   - export LD_PRELOAD=$PWD/mockeagain/mockeagain.so
   - export LD_LIBRARY_PATH=$PWD/mockeagain:$LD_LIBRARY_PATH
   - export TEST_NGINX_RESOLVER=8.8.4.4
   - export NGX_BUILD_CC=$CC
   - ngx-build $NGINX_VERSION --with-ipv6 --with-http_realip_module --with-http_ssl_module --with-cc-opt="-I$OPENSSL_INC" --with-ld-opt="-L$OPENSSL_LIB -Wl,-rpath,$OPENSSL_LIB" --add-module=../ndk-nginx-module --add-module=../lua-nginx-module --add-module=../echo-nginx-module --with-debug > build.log 2>&1 || (cat build.log && exit 1)
-  - nginx -V
+  - nginx -V; memcached -V;
   - ldd `which nginx`|grep -E 'luajit|ssl|pcre'
   - prove -r t
