@@ -23,8 +23,8 @@ if not ok or type(new_tab) ~= "function" then
     new_tab = function (narr, nrec) return {} end
 end
 
-local function _read_reply(sock, len) 
-    local line, err 
+local function _read_reply(sock, len)
+    local line, err
     if len == nil then
         line, err = sock:receive()
     else
@@ -200,7 +200,7 @@ local function _get_reply(sock)
         return nil, nil, err
     end
 
-    line, err = _read_reply(sock, 7) -- discard the trailing "\r\nEND\r\n"
+    local _, err = _read_reply(sock, 7) -- discard the trailing "\r\nEND\r\n"
     if err then
         return nil, nil, err
     end
@@ -565,7 +565,7 @@ function _M.flush_all(self, time)
     return 1
 end
 
-local function _incr_decr_reply(sock) 
+local function _incr_decr_reply(sock)
     local line, err = _read_reply(sock)
     if err then
         return nil, err
@@ -787,12 +787,12 @@ end
 
 
 function _M.init_pipeline(self, n)
-    if self._reqs then 
+    if self._reqs then
         return "already init pipeline"
     end
 
     if n and type(n) ~= 'number' then
-        return "buffer size is number type"
+        error("bad n arg: number expected, but got " .. type(n), 2)
     end
     self._reqs = {
         new_tab(n or 4, 0),
