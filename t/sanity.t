@@ -1607,7 +1607,6 @@ failed to connect: timeout
 lua tcp socket connect timed out
 
 
-
 === TEST 30: set keepalive and get reused times
 --- http_config eval: $::HttpConfig
 --- config
@@ -2470,6 +2469,6 @@ init: no pipeline
 --- request
 GET /t
 --- response_body
-init: buffer size is number type
+init: bad n arg: number expected, but got string
 --- no_error_log
 [error]

@@ -7,6 +7,7 @@ local match = string.match
 local tcp = ngx.socket.tcp
 local strlen = string.len
 local concat = table.concat
+local tab_insert = table.insert
 local setmetatable = setmetatable
 local type = type
 
@@ -220,9 +221,10 @@ function _M.get(self, key)
 
     local req = "get " .. self.escape_key(key) .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        reqs[1][#reqs[1] + 1] = req
-        reqs[2][#reqs[2] + 1] = _get_reply
+        tab_insert(reqs, req)
+        tab_insert(readers, _get_reply)
         return 1
     end
 
@@ -398,9 +400,10 @@ local function _store(self, cmd, key, value, exptime, flags)
                 .. exptime .. " " .. strlen(value) .. "\r\n" .. value
                 .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        reqs[1][#reqs[1] + 1] = req
-        reqs[2][#reqs[2] + 1] = _store_reply
+        tab_insert(reqs, req)
+        tab_insert(readers, _store_reply)
         return 1
     end
     local bytes, err = sock:send(req)
@@ -500,9 +503,10 @@ function _M.delete(self, key)
 
     local req = "delete " .. key .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        reqs[1][#reqs[1] + 1] = req
-        reqs[2][#reqs[2] + 1] = _delete_reply
+        tab_insert(reqs, req)
+        tab_insert(readers, _delete_reply)
         return 1
     end
 
@@ -586,9 +590,10 @@ local function _incr_decr(self, cmd, key, value)
 
     local req = cmd .. " " .. self.escape_key(key) .. " " .. value .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        reqs[1][#reqs[1] + 1] = req
-        reqs[2][#reqs[2] + 1] = _incr_decr_reply
+        tab_insert(reqs, req)
+        tab_insert(readers, _incr_decr_reply)
         return 1
     end
 
@@ -650,9 +655,10 @@ function _M.stats(self, args)
     end
 
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        reqs[1][#reqs[1] + 1] = req
-        reqs[2][#reqs[2] + 1] = _stats_reply
+        tab_insert(reqs, req)
+        tab_insert(readers, _stats_reply)
         return 1
     end
 
@@ -727,9 +733,10 @@ function _M.verbosity(self, level)
 
     local req = "verbosity " .. level .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        reqs[1][#reqs[1] + 1] = req
-        reqs[2][#reqs[2] + 1] = _verbosity_reply
+        tab_insert(reqs, req)
+        tab_insert(readers, _verbosity_reply)
         return 1
     end
 
@@ -762,9 +769,10 @@ function _M.touch(self, key, exptime)
 
     local req = "touch " .. self.escape_key(key) .. " ".. exptime .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        reqs[1][#reqs[1] + 1] = req
-        reqs[2][#reqs[2] + 1] = _touch_reply
+        tab_insert(reqs, req)
+        tab_insert(readers, _touch_reply)
         return 1
     end
 
@@ -792,24 +800,24 @@ function _M.init_pipeline(self, n)
     end
 
     if n and type(n) ~= 'number' then
-        error("bad n arg: number expected, but got " .. type(n), 2)
+        return "bad n arg: number expected, but got " .. type(n)
     end
-    self._reqs = {
-        new_tab(n or 4, 0),
-        new_tab(n or 4, 0),
-    }
+    self._reqs = new_tab(n or 4, 0)
+    self._readers = new_tab(n or 4, 0)
     return nil
 end
 
 
 function _M.cancel_pipeline(self)
     self._reqs = nil
+    self._readers = nil
 end
 
 
 function _M.commit_pipeline(self)
     local reqs = rawget(self, "_reqs")
-    if not reqs then
+    local readers = rawget(self, "_readers")
+    if not reqs or not readers then
         return nil, "no pipeline"
     end
     local sock = self.sock
@@ -817,19 +825,20 @@ function _M.commit_pipeline(self)
         return nil, "not initialized"
     end
 
-    if #self._reqs[1] == 0 then
+    if #self._reqs == 0 then
         return nil, "no more cmds"
     end
-    local bytes, err = sock:send(concat(reqs[1]))
+    local bytes, err = sock:send(reqs)
     if not bytes then
         return nil, err
     end
 
     local results = {}
-    for i=1, #reqs[2] do
-        results[i] = { reqs[2][i](sock) }
+    for i=1, #readers do
+        results[i] = {readers[i](sock) }
     end
     self._reqs = nil
+    self._readers = nil
     return results, nil
 end
 
