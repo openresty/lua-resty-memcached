@@ -849,6 +849,8 @@ end
 function _M.commit_pipeline(self)
     local reqs = rawget(self, "_reqs")
     local readers = rawget(self, "_readers")
+    self._reqs = nil
+    self._readers = nil
     if not reqs or not readers then
         return nil, "no pipeline"
     end
@@ -857,7 +859,7 @@ function _M.commit_pipeline(self)
         return nil, "not initialized"
     end
 
-    if #self._reqs == 0 then
+    if #readers == 0 then
         return nil, "no more cmds"
     end
     local bytes, err = sock:send(reqs)
@@ -866,11 +868,10 @@ function _M.commit_pipeline(self)
     end
 
     local results = {}
-    for i=1, #readers do
-        results[i] = {readers[i](sock) }
+    for i, reader in ipairs(readers) do
+        results[i] = { reader(sock) }
     end
-    self._reqs = nil
-    self._readers = nil
+
     return results, nil
 end
 
