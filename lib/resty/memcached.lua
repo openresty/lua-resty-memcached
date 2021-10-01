@@ -219,17 +219,15 @@ function _M.get(self, key)
         return nil, nil, "not initialized"
     end
 
+    local req = "get " .. self.escape_key(key) .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        local readers = rawget(self, "_readers")
-        tab_insert(reqs, "get ")
-        tab_insert(reqs, self.escape_key(key))
-        tab_insert(reqs, "\r\n")
+        tab_insert(reqs, req)
         tab_insert(readers, _get_reply)
         return 1
     end
 
-    local req = {"get ", self.escape_key(key), "\r\n"}
     local bytes, err = sock:send(req)
     if not bytes then
         return nil, nil, err
@@ -316,8 +314,7 @@ function _M.gets(self, key)
         return nil, nil, nil, "not initialized"
     end
 
-    local req = {"gets ", self.escape_key(key), "\r\n"}
-    local bytes, err = sock:send(req)
+    local bytes, err = sock:send("gets " .. self.escape_key(key) .. "\r\n")
     if not bytes then
         return nil, nil, nil, err
     end
@@ -399,27 +396,16 @@ local function _store(self, cmd, key, value, exptime, flags)
         value = _expand_table(value)
     end
 
+    local req = cmd .. " " .. self.escape_key(key) .. " " .. flags .. " "
+                .. exptime .. " " .. strlen(value) .. "\r\n" .. value
+                .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        local readers = rawget(self, "_readers")
-        tab_insert(reqs, cmd)
-        tab_insert(reqs, " ")
-        tab_insert(reqs, self.escape_key(key))
-        tab_insert(reqs, " ")
-        tab_insert(reqs, flags)
-        tab_insert(reqs, " ")
-        tab_insert(reqs, exptime)
-        tab_insert(reqs, " ")
-        tab_insert(reqs, strlen(value))
-        tab_insert(reqs, "\r\n")
-        tab_insert(reqs, value)
-        tab_insert(reqs, "\r\n")
-
+        tab_insert(reqs, req)
         tab_insert(readers, _store_reply)
         return 1
     end
-    local req = {cmd, " ", self.escape_key(key), " ", flags, " ",  exptime,
-                 " ", strlen(value), "\r\n", value, "\r\n"}
     local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
@@ -468,8 +454,9 @@ function _M.cas(self, key, value, cas_uniq, exptime, flags)
         return nil, "not initialized"
     end
 
-    local req = {"cas ", self.escape_key(key), " ", flags, " ", exptime, " ",
-                 strlen(value), " ", cas_uniq, "\r\n", value, "\r\n"}
+    local req = "cas " .. self.escape_key(key) .. " " .. flags .. " "
+                .. exptime .. " " .. strlen(value) .. " " .. cas_uniq
+                .. "\r\n" .. value .. "\r\n"
 
     -- local cjson = require "cjson"
     -- print("request: ", cjson.encode(req))
@@ -514,17 +501,15 @@ function _M.delete(self, key)
 
     key = self.escape_key(key)
 
+    local req = "delete " .. key .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        local readers = rawget(self, "_readers")
-        tab_insert(reqs, "delete ")
-        tab_insert(reqs, key)
-        tab_insert(reqs, "\r\n")
+        tab_insert(reqs, req)
         tab_insert(readers, _delete_reply)
         return 1
     end
 
-    local req = {"delete ", key, "\r\n"}
     local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
@@ -562,7 +547,7 @@ function _M.flush_all(self, time)
 
     local req
     if time then
-        req = {"flush_all ", time, "\r\n"}
+        req = "flush_all " .. time .. "\r\n"
     else
         req = "flush_all\r\n"
     end
@@ -603,20 +588,15 @@ local function _incr_decr(self, cmd, key, value)
         return nil, "not initialized"
     end
 
+    local req = cmd .. " " .. self.escape_key(key) .. " " .. value .. "\r\n"
     local reqs = rawget(self, "_reqs")
     local readers = rawget(self, "_readers")
     if reqs then
-        tab_insert(reqs, cmd)
-        tab_insert(reqs, " ")
-        tab_insert(reqs, self.escape_key(key))
-        tab_insert(reqs, " ")
-        tab_insert(reqs, value)
-        tab_insert(reqs, "\r\n")
+        tab_insert(reqs, req)
         tab_insert(readers, _incr_decr_reply)
         return 1
     end
 
-    local req = {cmd," ", self.escape_key(key), " ", value, "\r\n"}
     local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
@@ -667,27 +647,21 @@ function _M.stats(self, args)
         return nil, "not initialized"
     end
 
+    local req
+    if args then
+        req = "stats " .. args .. "\r\n"
+    else
+        req = "stats\r\n"
+    end
+
     local reqs = rawget(self, "_reqs")
     local readers = rawget(self, "_readers")
     if reqs then
-        if args then
-            tab_insert(reqs, "stats ")
-            tab_insert(reqs, args)
-            tab_insert(reqs, "\r\n")
-        else
-            tab_insert(reqs, "stats\r\n")
-        end
+        tab_insert(reqs, req)
         tab_insert(readers, _stats_reply)
         return 1
     end
 
-
-    local req
-    if args then
-        req = {"stats ", args, "\r\n"}
-    else
-        req = "stats\r\n"
-    end
     local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
@@ -757,17 +731,15 @@ function _M.verbosity(self, level)
         return nil, "not initialized"
     end
 
+    local req = "verbosity " .. level .. "\r\n"
     local reqs = rawget(self, "_reqs")
+    local readers = rawget(self, "_readers")
     if reqs then
-        local readers = rawget(self, "_readers")
-        tab_insert(reqs, "verbosity ")
-        tab_insert(reqs, level)
-        tab_insert(reqs, "\r\n")
+        tab_insert(reqs, req)
         tab_insert(readers, _verbosity_reply)
         return 1
     end
 
-    local req = {"verbosity ", level, "\r\n"}
     local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
@@ -795,19 +767,15 @@ function _M.touch(self, key, exptime)
         return nil, "not initialized"
     end
 
+    local req = "touch " .. self.escape_key(key) .. " ".. exptime .. "\r\n"
     local reqs = rawget(self, "_reqs")
     local readers = rawget(self, "_readers")
     if reqs then
-        tab_insert(reqs, "touch ")
-        tab_insert(reqs, self.escape_key(key))
-        tab_insert(reqs, " ")
-        tab_insert(reqs, exptime)
-        tab_insert(reqs, "\r\n")
+        tab_insert(reqs, req)
         tab_insert(readers, _touch_reply)
         return 1
     end
 
-    local req = {"touch ", self.escape_key(key), " ", exptime, "\r\n"}
     local bytes, err = sock:send(req)
     if not bytes then
         return nil, err
@@ -834,7 +802,7 @@ function _M.init_pipeline(self, n)
     if n and type(n) ~= 'number' then
         return "bad n arg: number expected, but got " .. type(n)
     end
-    self._reqs = new_tab(n or 20, 0)
+    self._reqs = new_tab(n or 4, 0)
     self._readers = new_tab(n or 4, 0)
     return nil
 end
