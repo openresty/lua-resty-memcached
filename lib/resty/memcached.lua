@@ -10,7 +10,9 @@ local concat = table.concat
 local tab_insert = table.insert
 local setmetatable = setmetatable
 local type = type
+local tab_clear = require "table.clear"
 
+local cmd_tab = {}
 
 local _M = {
     _VERSION = '0.16'
@@ -118,19 +120,18 @@ local function _multi_get(self, keys)
     end
 
     local escape_key = self.escape_key
-    local cmd = {"get"}
-    local n = 1
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, "get")
 
     for i = 1, nkeys do
-        cmd[n + 1] = " "
-        cmd[n + 2] = escape_key(keys[i])
-        n = n + 2
+        tab_insert(cmd_tab, " ")
+        tab_insert(cmd_tab, escape_key(keys[i]))
     end
-    cmd[n + 1] = "\r\n"
+    tab_insert(cmd_tab, "\r\n")
 
-    -- print("multi get cmd: ", cmd)
+    -- print("multi get cmd: ", cmd_tab)
 
-    local bytes, err = sock:send(cmd)
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, err
     end
@@ -219,16 +220,21 @@ function _M.get(self, key)
         return nil, nil, "not initialized"
     end
 
-    local req = "get " .. self.escape_key(key) .. "\r\n"
     local reqs = rawget(self, "_reqs")
-    local readers = rawget(self, "_readers")
     if reqs then
-        tab_insert(reqs, req)
+        local readers = rawget(self, "_readers")
+        tab_insert(reqs, "get ")
+        tab_insert(reqs, self.escape_key(key))
+        tab_insert(reqs, "\r\n")
         tab_insert(readers, _get_reply)
         return 1
     end
 
-    local bytes, err = sock:send(req)
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, "get ")
+    tab_insert(cmd_tab, self.escape_key(key))
+    tab_insert(cmd_tab, "\r\n")
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, nil, err
     end
@@ -250,18 +256,17 @@ local function _multi_gets(self, keys)
     end
 
     local escape_key = self.escape_key
-    local cmd = {"gets"}
-    local n = 1
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, "gets")
     for i = 1, nkeys do
-        cmd[n + 1] = " "
-        cmd[n + 2] = escape_key(keys[i])
-        n = n + 2
+        tab_insert(cmd_tab, " ")
+        tab_insert(cmd_tab, escape_key(keys[i]))
     end
-    cmd[n + 1] = "\r\n"
+    tab_insert(cmd_tab, "\r\n")
 
-    -- print("multi get cmd: ", cmd)
+    -- print("multi get cmd: ", cmd_tab)
 
-    local bytes, err = sock:send(cmd)
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, err
     end
@@ -314,7 +319,11 @@ function _M.gets(self, key)
         return nil, nil, nil, "not initialized"
     end
 
-    local bytes, err = sock:send("gets " .. self.escape_key(key) .. "\r\n")
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, "gets ")
+    tab_insert(cmd_tab, self.escape_key(key))
+    tab_insert(cmd_tab, "\r\n")
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, nil, nil, err
     end
@@ -396,17 +405,41 @@ local function _store(self, cmd, key, value, exptime, flags)
         value = _expand_table(value)
     end
 
-    local req = cmd .. " " .. self.escape_key(key) .. " " .. flags .. " "
-                .. exptime .. " " .. strlen(value) .. "\r\n" .. value
-                .. "\r\n"
     local reqs = rawget(self, "_reqs")
-    local readers = rawget(self, "_readers")
     if reqs then
-        tab_insert(reqs, req)
+        local readers = rawget(self, "_readers")
+        tab_insert(reqs, cmd)
+        tab_insert(reqs, " ")
+        tab_insert(reqs, self.escape_key(key))
+        tab_insert(reqs, " ")
+        tab_insert(reqs, flags)
+        tab_insert(reqs, " ")
+        tab_insert(reqs, exptime)
+        tab_insert(reqs, " ")
+        tab_insert(reqs, strlen(value))
+        tab_insert(reqs, "\r\n")
+        tab_insert(reqs, value)
+        tab_insert(reqs, "\r\n")
+
         tab_insert(readers, _store_reply)
         return 1
     end
-    local bytes, err = sock:send(req)
+
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, cmd)
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, self.escape_key(key))
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, flags)
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, exptime)
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, strlen(value))
+    tab_insert(cmd_tab, "\r\n")
+    tab_insert(cmd_tab, value)
+    tab_insert(cmd_tab, "\r\n")
+
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, err
     end
@@ -454,14 +487,25 @@ function _M.cas(self, key, value, cas_uniq, exptime, flags)
         return nil, "not initialized"
     end
 
-    local req = "cas " .. self.escape_key(key) .. " " .. flags .. " "
-                .. exptime .. " " .. strlen(value) .. " " .. cas_uniq
-                .. "\r\n" .. value .. "\r\n"
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, "cas ")
+    tab_insert(cmd_tab, self.escape_key(key))
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, flags)
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, exptime)
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, strlen(value))
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, cas_uniq)
+    tab_insert(cmd_tab, "\r\n")
+    tab_insert(cmd_tab, value)
+    tab_insert(cmd_tab, "\r\n")
 
     -- local cjson = require "cjson"
-    -- print("request: ", cjson.encode(req))
+    -- print("request: ", cjson.encode(cmd_tab))
 
-    local bytes, err = sock:send(req)
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, err
     end
@@ -501,16 +545,21 @@ function _M.delete(self, key)
 
     key = self.escape_key(key)
 
-    local req = "delete " .. key .. "\r\n"
     local reqs = rawget(self, "_reqs")
-    local readers = rawget(self, "_readers")
     if reqs then
-        tab_insert(reqs, req)
+        local readers = rawget(self, "_readers")
+        tab_insert(reqs, "delete ")
+        tab_insert(reqs, key)
+        tab_insert(reqs, "\r\n")
         tab_insert(readers, _delete_reply)
         return 1
     end
 
-    local bytes, err = sock:send(req)
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, "delete ")
+    tab_insert(cmd_tab, key)
+    tab_insert(cmd_tab, "\r\n")
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, err
     end
@@ -545,14 +594,17 @@ function _M.flush_all(self, time)
         return nil, "not initialized"
     end
 
-    local req
+    tab_clear(cmd_tab)
     if time then
-        req = "flush_all " .. time .. "\r\n"
+        tab_insert(cmd_tab, "flush_all ")
+        tab_insert(cmd_tab, time)
+        tab_insert(cmd_tab, "\r\n")
     else
-        req = "flush_all\r\n"
+        tab_clear(cmd_tab)
+        tab_insert(cmd_tab, "flush_all\r\n")
     end
 
-    local bytes, err = sock:send(req)
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, err
     end
@@ -588,16 +640,28 @@ local function _incr_decr(self, cmd, key, value)
         return nil, "not initialized"
     end
 
-    local req = cmd .. " " .. self.escape_key(key) .. " " .. value .. "\r\n"
     local reqs = rawget(self, "_reqs")
     local readers = rawget(self, "_readers")
     if reqs then
-        tab_insert(reqs, req)
+        tab_insert(reqs, cmd)
+        tab_insert(reqs, " ")
+        tab_insert(reqs, self.escape_key(key))
+        tab_insert(reqs, " ")
+        tab_insert(reqs, value)
+        tab_insert(reqs, "\r\n")
         tab_insert(readers, _incr_decr_reply)
         return 1
     end
 
-    local bytes, err = sock:send(req)
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, cmd)
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, self.escape_key(key))
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, value)
+    tab_insert(cmd_tab, "\r\n")
+
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, err
     end
@@ -647,22 +711,30 @@ function _M.stats(self, args)
         return nil, "not initialized"
     end
 
-    local req
-    if args then
-        req = "stats " .. args .. "\r\n"
-    else
-        req = "stats\r\n"
-    end
-
     local reqs = rawget(self, "_reqs")
     local readers = rawget(self, "_readers")
     if reqs then
-        tab_insert(reqs, req)
+        if args then
+            tab_insert(reqs, "stats ")
+            tab_insert(reqs, args)
+            tab_insert(reqs, "\r\n")
+        else
+            tab_insert(reqs, "stats\r\n")
+        end
         tab_insert(readers, _stats_reply)
         return 1
     end
 
-    local bytes, err = sock:send(req)
+    local bytes, err
+    if args then
+        tab_clear(cmd_tab)
+        tab_insert(cmd_tab, "stats ")
+        tab_insert(cmd_tab, args)
+        tab_insert(cmd_tab, "\r\n")
+        bytes, err = sock:send(cmd_tab)
+    else
+        bytes, err = sock:send("stats\r\n")
+    end
     if not bytes then
         return nil, err
     end
@@ -731,16 +803,21 @@ function _M.verbosity(self, level)
         return nil, "not initialized"
     end
 
-    local req = "verbosity " .. level .. "\r\n"
     local reqs = rawget(self, "_reqs")
-    local readers = rawget(self, "_readers")
     if reqs then
-        tab_insert(reqs, req)
+        local readers = rawget(self, "_readers")
+        tab_insert(reqs, "verbosity ")
+        tab_insert(reqs, level)
+        tab_insert(reqs, "\r\n")
         tab_insert(readers, _verbosity_reply)
         return 1
     end
 
-    local bytes, err = sock:send(req)
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, "verbosity ")
+    tab_insert(cmd_tab, level)
+    tab_insert(cmd_tab, "\r\n")
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, err
     end
@@ -767,16 +844,25 @@ function _M.touch(self, key, exptime)
         return nil, "not initialized"
     end
 
-    local req = "touch " .. self.escape_key(key) .. " ".. exptime .. "\r\n"
     local reqs = rawget(self, "_reqs")
     local readers = rawget(self, "_readers")
     if reqs then
-        tab_insert(reqs, req)
+        tab_insert(reqs, "touch ")
+        tab_insert(reqs, self.escape_key(key))
+        tab_insert(reqs, " ")
+        tab_insert(reqs, exptime)
+        tab_insert(reqs, "\r\n")
         tab_insert(readers, _touch_reply)
         return 1
     end
 
-    local bytes, err = sock:send(req)
+    tab_clear(cmd_tab)
+    tab_insert(cmd_tab, "touch ")
+    tab_insert(cmd_tab, self.escape_key(key))
+    tab_insert(cmd_tab, " ")
+    tab_insert(cmd_tab, exptime)
+    tab_insert(cmd_tab, "\r\n")
+    local bytes, err = sock:send(cmd_tab)
     if not bytes then
         return nil, err
     end
@@ -802,7 +888,7 @@ function _M.init_pipeline(self, n)
     if n and type(n) ~= 'number' then
         return "bad n arg: number expected, but got " .. type(n)
     end
-    self._reqs = new_tab(n or 4, 0)
+    self._reqs = new_tab(n or 20, 0)
     self._readers = new_tab(n or 4, 0)
     return nil
 end
