@@ -15,7 +15,7 @@ local tab_clear = require "table.clear"
 local cmd_tab = {}
 
 local _M = {
-    _VERSION = '0.16'
+    _VERSION = '0.17'
 }
 
 
