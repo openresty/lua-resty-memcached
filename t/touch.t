@@ -112,4 +112,3 @@ get key: value
  GET /t
 --- response_body
 failed to touch dog&cat&rabbit: NOT_FOUND
-
