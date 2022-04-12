@@ -187,7 +187,7 @@ dog: 56
 
 
 
-=== TEST 4: set an exsistent key
+=== TEST 4: set an existent key
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -245,7 +245,7 @@ dog: 56
 
 
 
-=== TEST 5: replace an exsistent key
+=== TEST 5: replace an existent key
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -407,7 +407,7 @@ dog not found
 
 
 
-=== TEST 8: prepend to an exsistent key
+=== TEST 8: prepend to an existent key
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -515,7 +515,7 @@ dog not found
 
 
 
-=== TEST 10: append to an exsistent key
+=== TEST 10: append to an existent key
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -571,7 +571,7 @@ dog: 3256
 
 
 
-=== TEST 11: delete an exsistent key
+=== TEST 11: delete an existent key
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -686,7 +686,7 @@ dog not found
 
 
 
-=== TEST 13: delete an exsistent key with delay
+=== TEST 13: delete an existent key with delay
 --- SKIP
 --- http_config eval: $::HttpConfig
 --- config
