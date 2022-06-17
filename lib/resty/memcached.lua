@@ -63,11 +63,13 @@ function _M.new(self, opts)
        end
     end
 
-    return setmetatable({
+    local memc = setmetatable({
         sock = sock,
         escape_key = escape_key,
         unescape_key = unescape_key,
     }, mt)
+
+    return memc
 end
 
 
