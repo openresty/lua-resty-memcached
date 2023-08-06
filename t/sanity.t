@@ -1601,10 +1601,10 @@ blah: not found
     }
 --- request
 GET /t
---- response_body
-failed to connect: timeout
---- error_log
-lua tcp socket connect timed out
+--- response_body_like eval
+qr/failed to connect: timeout|failed to connect: network is unreachable/ms
+--- error_log eval
+qr/lua tcp socket connect timed out|Network is unreachable/ms
 
 
 
