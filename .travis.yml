@@ -44,7 +44,7 @@ env:
     - TEST_NGINX_SLEEP=0.006
     - MEMCACHED_VERSION=1.6.10
   matrix:
-    - NGINX_VERSION=1.25.1
+    - NGINX_VERSION=1.25.3
 
 install:
   - if [ ! -d download-cache ]; then mkdir download-cache; fi
