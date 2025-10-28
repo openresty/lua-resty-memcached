@@ -137,6 +137,6 @@ dog: 32 (flags: 0)
 --- request
 GET /t
 --- response_body
-failed to connect to memcached: 19: self signed certificate in certificate chain
+failed to connect to memcached: 19: self-signed certificate in certificate chain
 --- error_log
-lua ssl certificate verify error: (19: self signed certificate in certificate chain)
+lua ssl certificate verify error: (19: self-signed certificate in certificate chain)
