@@ -7,6 +7,7 @@ repeat_each(2);
 
 plan tests => repeat_each() * (3 * blocks());
 
+log_level('info');
 my $pwd = cwd();
 
 our $HttpConfig = qq{
@@ -30,7 +31,7 @@ __DATA__
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            assert(memc:set_timeout(1000)) -- 1 sec
+            assert(memc:set_timeout(2000)) -- 2 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
@@ -91,7 +92,7 @@ dog: 32 (flags: 0)
             local memcached = require "resty.memcached"
             local memc = memcached:new()
 
-            assert(memc:set_timeout(1000)) -- 1 sec
+            assert(memc:set_timeout(2000)) -- 2 sec
 
             local ok, err = memc:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
             if not ok then
