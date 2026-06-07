@@ -752,7 +752,7 @@ local function _version_reply(sock)
 
     local ver = match(line, "^VERSION (.+)$")
     if not ver then
-        return nil, ver
+        return nil, line
     end
 
     return ver
