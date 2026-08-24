@@ -35,6 +35,7 @@ jobs:
             psmisc \
             time \
             wget
+          sudo systemctl stop memcached
 
       - name: Build and test
         env:
